@@ -1,0 +1,8 @@
+# Store text with LF so dart format gives the same result on every OS.
+* text=auto eol=lf
+*.bat text eol=crlf
+*.png binary
+*.jpg binary
+*.pdf binary
+*.ico binary
+*.ttf binary

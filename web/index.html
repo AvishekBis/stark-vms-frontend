@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <!--
+    $FLUTTER_BASE_HREF is replaced by the value of "--base-href" from
+    "flutter build web". It must start and end with a slash.
+  -->
+  <base href="$FLUTTER_BASE_HREF">
+
+  <meta charset="UTF-8">
+  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Stark Group Vehicle Management System">
+
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-title" content="Stark Group VMS">
+  <link rel="apple-touch-icon" href="icons/Icon-192.png">
+  <link rel="icon" type="image/png" href="favicon.png">
+
+  <title>Stark Group VMS</title>
+  <link rel="manifest" href="manifest.json">
+
+  <style>
+    body { margin: 0; background: #F5F7FA; }
+    #app-loading {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-family: Roboto, "Segoe UI", Arial, sans-serif;
+      color: #17375E;
+    }
+    #app-loading p { margin: 4px 0; }
+    #app-loading .hint { color: #6B7280; font-size: 14px; }
+  </style>
+</head>
+<body>
+  <div id="app-loading" role="status" aria-live="polite">
+    <p><strong>Stark Group VMS</strong></p>
+    <p>Loading&hellip;</p>
+    <p class="hint">The first start can take a little longer.</p>
+  </div>
+  <script>
+    {{flutter_js}}
+    {{flutter_build_config}}
+    _flutter.loader.load({
+      onEntrypointLoaded: async function (engineInitializer) {
+        const appRunner = await engineInitializer.initializeEngine();
+        const loading = document.getElementById('app-loading');
+        if (loading) {
+          loading.remove();
+        }
+        await appRunner.runApp();
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,55 @@
+name: Frontend CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Format, analyze, test, build
+    runs-on: ubuntu-latest
+    env:
+      # Repository variable (Settings > Secrets and variables > Actions > Variables).
+      API_BASE_URL: ${{ vars.API_BASE_URL || 'http://localhost:8080/api/v1' }}
+      # Release builds hide the demo account hint unless this variable is 'true'
+      # (only for a course demo deployment).
+      SHOW_DEMO_CREDENTIALS: ${{ vars.SHOW_DEMO_CREDENTIALS || 'false' }}
+    steps:
+      - name: Check out
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: 3.47.7
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Check formatting
+        run: dart format --output=none --set-exit-if-changed .
+
+      - name: Analyze
+        run: flutter analyze
+
+      - name: Unit and widget tests
+        run: flutter test
+
+      - name: Build web
+        run: >-
+          flutter build web --release
+          --dart-define=API_BASE_URL="$API_BASE_URL"
+          --dart-define=SHOW_DEMO_CREDENTIALS="$SHOW_DEMO_CREDENTIALS"
+
+      - name: Upload build
+        uses: actions/upload-artifact@v4
+        with:
+          name: stark-vms-web
+          path: build/web
+          retention-days: 7
