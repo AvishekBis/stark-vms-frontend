@@ -16,16 +16,19 @@ there is no mock or hard-coded fleet data in `lib/` (FR-V06); fakes live only in
 
 | | URL |
 |---|---|
-| Frontend (Netlify) | `https://<your-site>.netlify.app` |
-| Backend API (Render) | `https://<your-service>.onrender.com/api/v1` |
-| API docs (Swagger UI) | `https://<your-service>.onrender.com/swagger-ui.html` |
+| Frontend (Netlify) | <https://stark-vms-avishek.netlify.app> |
+| Backend API (Render) | <https://stark-vms-backend-i2i2.onrender.com/api/v1> |
+| API docs (Swagger UI) | <https://stark-vms-backend-i2i2.onrender.com/swagger-ui.html> |
 
-Demo accounts (non-real credentials, local/demo profile only):
+Demo accounts — throw-away credentials, not used anywhere else. The live site uses the second pair; running
+locally bootstraps the first:
 
-| Role | Email | Password |
-|---|---|---|
-| ADMIN | `admin@stark.local` | `Admin@12345` |
-| STAFF | `staff@stark.local` | `Staff@12345` |
+| Role | Email | Password (local) | Password (live site) |
+|---|---|---|---|
+| ADMIN | `admin@stark.local` | `Admin@12345` | `Wildstone99@b` |
+| STAFF | `staff@stark.local` | `Staff@12345` | `Wildstone98@b` |
+
+Signing in as STAFF shows the role rules: deleting a vehicle is ADMIN-only and the API answers 403.
 
 > The free Render instance sleeps when idle. The first request can take up to a minute; the app
 > shows **"Connecting to server…"** after 3 seconds. To give it a head start, the app sends a
@@ -242,7 +245,7 @@ flutter run -d chrome --web-port 5000 --dart-define=API_BASE_URL=http://localhos
 ## Build and deploy to Netlify
 
 ```bash
-flutter build web --release --dart-define=API_BASE_URL=https://<your-service>.onrender.com/api/v1
+flutter build web --release --dart-define=API_BASE_URL=https://stark-vms-backend-i2i2.onrender.com/api/v1
 # Course demo only: also show the demo account hint on the login screen.
 #   --dart-define=SHOW_DEMO_CREDENTIALS=true
 ```
