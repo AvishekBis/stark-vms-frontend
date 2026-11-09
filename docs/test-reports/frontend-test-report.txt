@@ -1,0 +1,112 @@
+Stark VMS frontend - flutter test --reporter expanded
+Run on 2026-11-08 in stark-vms-frontend/ (Flutter 3.47.7), v1.1 (ADR 0022 login throttling, ADR 0023 optimistic locking; re-run after the backend security-review fixes, no frontend change). Result: 106 tests, all passed; flutter analyze: No issues found; dart format: 0 changed.
+Absolute paths are shortened to paths relative to stark-vms-frontend/.
+
+00:00 +0: loading test/unit/api_client_test.dart
+00:00 +0: test/unit/api_client_test.dart: ApiClient (guideline 14.2: one client adds the JWT) adds the bearer token and sends query parameters
+00:00 +1: test/unit/api_client_test.dart: ApiClient (guideline 14.2: one client adds the JWT) adds the bearer token and sends query parameters
+00:00 +2: test/unit/api_client_test.dart: ApiClient (guideline 14.2: one client adds the JWT) adds the bearer token and sends query parameters
+00:00 +3: test/unit/api_client_test.dart: ApiClient (guideline 14.2: one client adds the JWT) adds the bearer token and sends query parameters
+00:00 +4: test/unit/api_exception_test.dart: ApiException.fromProblemDetails uses the HTTP status and a default message for a non-JSON body
+00:00 +5: test/unit/api_client_test.dart: ApiClient (guideline 14.2: one client adds the JWT) sends no Authorization header without a token
+00:00 +6: test/unit/api_exception_test.dart: ApiException.fromProblemDetails falls back to the title when detail is missing
+00:00 +7: test/unit/api_client_test.dart: ApiClient (guideline 14.2: one client adds the JWT) a 401 on a protected call signs the user out (FR-AUTH-02)
+00:00 +8: test/unit/api_client_test.dart: ApiClient (guideline 14.2: one client adds the JWT) a 401 on a protected call signs the user out (FR-AUTH-02)
+00:00 +9: test/unit/api_client_test.dart: ApiClient (guideline 14.2: one client adds the JWT) a 401 on a protected call signs the user out (FR-AUTH-02)
+00:00 +10: test/unit/api_client_test.dart: ApiClient (guideline 14.2: one client adds the JWT) a 401 on a protected call signs the user out (FR-AUTH-02)
+00:00 +11: test/unit/app_config_test.dart: the demo credentials hint is off by default in release builds
+00:00 +12: test/unit/api_client_test.dart: ApiClient (guideline 14.2: one client adds the JWT) a 401 from login is a wrong password, not an expiry
+00:00 +13: test/unit/api_client_test.dart: ApiClient (guideline 14.2: one client adds the JWT) a 403 does not sign the user out (TC-07)
+00:00 +14: test/unit/auth_controller_test.dart: AuthController (FR-AUTH-01, FR-AUTH-02) starts signed out without a stored session
+00:00 +15: test/unit/auth_controller_test.dart: AuthController (FR-AUTH-01, FR-AUTH-02) login stores the session and the token
+00:00 +16: test/unit/auth_models_test.dart: LoginResponse.fromJson (FR-AUTH-01) parses token, expiry and user
+00:00 +17: test/unit/auth_models_test.dart: LoginResponse.fromJson (FR-AUTH-01) parses token, expiry and user
+00:00 +18: test/unit/auth_models_test.dart: LoginResponse.fromJson (FR-AUTH-01) parses token, expiry and user
+00:00 +19: test/unit/auth_models_test.dart: LoginResponse.fromJson (FR-AUTH-01) parses token, expiry and user
+00:00 +20: test/unit/auth_controller_test.dart: AuthController (FR-AUTH-01, FR-AUTH-02) logout clears the token
+00:00 +21: test/unit/auth_controller_test.dart: AuthController (FR-AUTH-01, FR-AUTH-02) logout clears the token
+00:00 +22: test/unit/auth_models_test.dart: LoginResponse.fromJson (FR-AUTH-01) unknown role gets the least privileges
+00:00 +23: test/unit/auth_models_test.dart: LoginResponse.fromJson (FR-AUTH-01) rejects a response without token
+00:00 +24: test/unit/auth_models_test.dart: AuthSession expires after expiresIn (FR-AUTH-02)
+00:00 +25: test/unit/auth_models_test.dart: AuthSession survives a JSON round trip for storage
+00:01 +26: test/unit/auth_redirect_test.dart: authRedirect (FR-AUTH-02) signed-out users are sent to login, keeping the target
+00:01 +27: test/unit/auth_redirect_test.dart: authRedirect (FR-AUTH-02) signed-in users leave login for the target or the dashboard
+00:01 +28: test/unit/auth_redirect_test.dart: authRedirect (FR-AUTH-02) external redirect targets are ignored
+00:01 +29: test/unit/auth_redirect_test.dart: authRedirect (FR-AUTH-02) while the session is restored the splash screen is shown
+00:02 +30: test/unit/login_throttling_test.dart: a 429 Problem Details keeps the detail and is not a 401
+00:02 +31: test/unit/login_throttling_test.dart: a 429 without a body still gets a helpful message
+00:02 +32: test/unit/login_throttling_test.dart: a 429 from login (or anywhere) never triggers the 401 sign-out
+00:02 +33: test/unit/login_throttling_test.dart: LoginController shows the 429 detail, not "invalid credentials"
+00:02 +34: test/unit/optimistic_locking_test.dart: version in VehicleResponse is parsed
+00:02 +35: test/unit/optimistic_locking_test.dart: version in VehicleResponse a missing version reads as 0 (new vehicle)
+00:02 +36: test/unit/optimistic_locking_test.dart: version in request bodies the update body carries the version, the create body does not
+00:02 +37: test/unit/optimistic_locking_test.dart: version in request bodies ApiVehicleRepository sends version in PUT and not in POST
+00:02 +38: test/unit/optimistic_locking_test.dart: version in request bodies ApiVehicleRepository sends version in PUT and not in POST
+00:02 +39: test/unit/optimistic_locking_test.dart: version in request bodies ApiVehicleRepository sends version in PUT and not in POST
+00:02 +40: test/unit/optimistic_locking_test.dart: version in request bodies ApiVehicleRepository sends version in PUT and not in POST
+00:02 +41: test/unit/optimistic_locking_test.dart: 409 stale-version ApiException.isStaleVersion matches only that 409
+00:02 +42: test/unit/optimistic_locking_test.dart: VehicleFormController updates with the version the vehicle was loaded with
+00:02 +43: test/unit/optimistic_locking_test.dart: VehicleFormController a create never goes through update
+00:02 +44: test/unit/optimistic_locking_test.dart: VehicleFormController a stale save sets isStale, not a field or general error
+00:02 +45: test/unit/optimistic_locking_test.dart: VehicleFormController any other 409 stays a normal error
+00:03 +46: test/unit/validators_test.dart: VehicleValidators.vehicleNumber (BR-03) requires a value
+00:03 +47: test/unit/validators_test.dart: VehicleValidators.vehicleNumber (BR-03) accepts typical Bangladeshi formats
+00:03 +48: test/unit/validators_test.dart: VehicleValidators.vehicleNumber (BR-03) must contain at least one letter or digit
+00:03 +49: test/unit/vehicle_model_test.dart: Vehicle.fromJson (FR-V01) parses a full VehicleResponse
+00:03 +50: test/unit/vehicle_model_test.dart: Vehicle.fromJson (FR-V01) parses a full VehicleResponse
+00:03 +51: test/unit/vehicle_model_test.dart: Vehicle.fromJson (FR-V01) parses a full VehicleResponse
+00:03 +52: test/unit/vehicle_model_test.dart: Vehicle.fromJson (FR-V01) parses a full VehicleResponse
+00:03 +53: test/unit/vehicle_model_test.dart: Vehicle.fromJson (FR-V01) parses a full VehicleResponse
+00:03 +54: test/unit/vehicle_model_test.dart: Vehicle.fromJson (FR-V01) parses a full VehicleResponse
+00:03 +55: test/unit/validators_test.dart: optional text max lengths brand and model max 50, colour max 30
+00:03 +56: test/unit/vehicle_model_test.dart: Vehicle.fromJson (FR-V01) accepts null optional fields
+00:03 +57: test/unit/validators_test.dart: login validators email must be present and well formed
+00:03 +58: test/unit/vehicle_model_test.dart: Vehicle.fromJson (FR-V01) rejects a body without id or vehicle number
+00:03 +59: test/unit/vehicle_model_test.dart: Vehicle.fromJson (FR-V01) rejects a body without id or vehicle number
+00:03 +60: test/unit/vehicle_model_test.dart: Vehicle.fromJson (FR-V01) rejects unknown enum values
+00:03 +61: test/unit/vehicle_model_test.dart: Vehicle.fromJson (FR-V01) toJson round-trips
+00:03 +62: test/unit/vehicle_model_test.dart: VehicleInput.toJson trims text and sends blank optional fields as null
+00:04 +63: test/unit/vehicle_query_test.dart: VehicleQuery.toQueryParameters defaults to page 0, size 20, newest first
+00:04 +64: test/unit/vehicle_query_test.dart: VehicleQuery.toQueryParameters adds a trimmed search and caps the size at 100
+00:04 +65: test/unit/vehicle_query_test.dart: VehicleQueryController a new search goes back to the first page
+00:04 +66: test/unit/vehicle_query_test.dart: VehicleQueryController tapping the same column flips the direction, a new column starts ascending
+00:04 +67: test/unit/vehicle_query_test.dart: VehicleQueryController changing the page size resets the page
+00:04 +68: test/widget/login_screen_test.dart: validates email and password before calling the API
+00:05 +69: test/widget/login_screen_test.dart: validates email and password before calling the API
+00:06 +70: test/widget/login_screen_test.dart: validates email and password before calling the API
+00:07 +71: test/widget/login_screen_test.dart: validates email and password before calling the API
+00:08 +72: test/widget/login_screen_test.dart: validates email and password before calling the API
+00:08 +73: test/widget/login_screen_test.dart: validates email and password before calling the API
+00:08 +74: test/widget/login_screen_test.dart: validates email and password before calling the API
+00:08 +75: test/widget/login_screen_test.dart: validates email and password before calling the API
+00:08 +76: test/widget/login_screen_test.dart: validates email and password before calling the API
+00:08 +77: test/widget/stale_version_test.dart: the dialog shows the server detail and Cancel keeps the edits
+00:09 +78: test/widget/stale_version_test.dart: the dialog shows the server detail and Cancel keeps the edits
+00:09 +79: test/widget/stale_version_test.dart: the dialog shows the server detail and Cancel keeps the edits
+00:09 +80: test/widget/stale_version_test.dart: the dialog shows the server detail and Cancel keeps the edits
+00:10 +81: test/widget/vehicle_form_screen_test.dart: validates required fields on the client (BR-03)
+00:10 +82: test/widget/vehicle_form_screen_test.dart: validates required fields on the client (BR-03)
+00:10 +83: test/widget/vehicle_form_screen_test.dart: validates required fields on the client (BR-03)
+00:10 +84: test/widget/vehicle_form_screen_test.dart: validates required fields on the client (BR-03)
+00:10 +85: test/widget/vehicle_form_screen_test.dart: validates required fields on the client (BR-03)
+00:11 +86: test/widget/vehicle_form_screen_test.dart: validates required fields on the client (BR-03)
+00:11 +87: test/widget/vehicle_list_screen_test.dart: renders rows from the repository with status badges (FR-V01)
+00:12 +88: test/widget/vehicle_form_screen_test.dart: shows the server duplicate error under the vehicle number (FR-V05)
+00:13 +89: test/widget/vehicle_list_screen_test.dart: STAFF sees Edit but not Delete (FR-V04)
+00:13 +90: test/widget/vehicle_form_screen_test.dart: edit mode is prefilled from the API (FR-V03)
+00:13 +91: test/widget/vehicle_list_screen_test.dart: ADMIN sees Delete
+00:13 +92: test/widget/vehicle_form_screen_test.dart: a successful save navigates to the vehicle (FR-V02)
+00:14 +93: test/widget/vehicle_list_screen_test.dart: ADMIN delete asks for confirmation and refreshes the list
+00:14 +94: test/widget/vehicle_form_screen_test.dart: server 400 field errors appear under the right field (TC-05)
+00:15 +95: test/widget/vehicle_list_screen_test.dart: search is debounced and sent to the server
+00:15 +96: test/widget/vehicle_form_screen_test.dart: a network failure on save is reported, form stays filled
+00:15 +97: test/widget/vehicle_form_screen_test.dart: a network failure on save is reported, form stays filled
+00:16 +98: test/widget/vehicle_list_screen_test.dart: shows the empty state when there are no vehicles
+00:16 +99: test/widget/vehicle_list_screen_test.dart: fast typing sends one request, not one per keystroke
+00:16 +100: test/widget/vehicle_list_screen_test.dart: Enter in the search field searches at once
+00:17 +101: test/widget/vehicle_list_screen_test.dart: tapping a column header sorts on the server
+00:17 +102: test/widget/vehicle_list_screen_test.dart: pagination asks the server for the next page
+00:19 +103: test/widget/vehicle_list_screen_test.dart: 600-1024 px shows the compact table with brand/model
+00:19 +104: test/widget/vehicle_list_screen_test.dart: wider than 1024 px shows the full table
+00:19 +105: test/widget/vehicle_list_screen_test.dart: cancelling the delete dialog keeps the vehicle
+00:19 +106: All tests passed!

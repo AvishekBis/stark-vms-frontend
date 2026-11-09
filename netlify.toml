@@ -1,0 +1,24 @@
+# Netlify serves the pre-built Flutter bundle, e.g.
+#   flutter build web --release --dart-define=API_BASE_URL=https://<service>.onrender.com/api/v1
+# A release build hides the demo account hint; add
+# --dart-define=SHOW_DEMO_CREDENTIALS=true only for a course demo deployment.
+[build]
+  publish = "build/web"
+
+# SPA routing: deep links such as /vehicles/12 must load index.html.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# Security headers for every page (web/_headers has the same rules for a
+# drag-and-drop deploy of build/web). No script-src / connect-src CSP yet:
+# Flutter's inline loader script and the per-deployment API URL need a
+# hash and an allow-list first (see README, "Security notes").
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    Content-Security-Policy = "frame-ancestors 'none'"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
