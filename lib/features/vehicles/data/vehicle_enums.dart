@@ -1,19 +1,7 @@
 /// API enums from the contract, each with a display label.
 library;
 
-T _parseEnum<T extends Enum>(
-  List<T> values,
-  String Function(T) apiValue,
-  Object? raw,
-  String name,
-) {
-  for (final value in values) {
-    if (apiValue(value) == raw) {
-      return value;
-    }
-  }
-  throw FormatException('Unknown $name: $raw');
-}
+import '../../../core/utils/enum_parsing.dart';
 
 enum VehicleType {
   car('CAR', 'Car'),
@@ -31,7 +19,11 @@ enum VehicleType {
   final String label;
 
   static VehicleType fromApi(Object? raw) =>
-      _parseEnum(values, (type) => type.apiValue, raw, 'vehicle type');
+      parseApiEnum(values, (type) => type.apiValue, raw, 'vehicle type');
+
+  /// For URL query parameters: unknown text is `null` (no filter).
+  static VehicleType? tryParse(String? raw) =>
+      tryParseApiEnum(values, (type) => type.apiValue, raw, ignoreCase: true);
 }
 
 enum FuelType {
@@ -51,7 +43,7 @@ enum FuelType {
   /// `null` stays `null`: fuel type is optional.
   static FuelType? fromApiOrNull(Object? raw) => raw == null
       ? null
-      : _parseEnum(values, (fuel) => fuel.apiValue, raw, 'fuel type');
+      : parseApiEnum(values, (fuel) => fuel.apiValue, raw, 'fuel type');
 }
 
 /// BR-04: only these three statuses exist.
@@ -66,5 +58,13 @@ enum VehicleStatus {
   final String label;
 
   static VehicleStatus fromApi(Object? raw) =>
-      _parseEnum(values, (status) => status.apiValue, raw, 'vehicle status');
+      parseApiEnum(values, (status) => status.apiValue, raw, 'vehicle status');
+
+  /// For URL query parameters: unknown text is `null` (no filter).
+  static VehicleStatus? tryParse(String? raw) => tryParseApiEnum(
+    values,
+    (status) => status.apiValue,
+    raw,
+    ignoreCase: true,
+  );
 }

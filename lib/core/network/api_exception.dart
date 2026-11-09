@@ -118,16 +118,17 @@ class ApiException implements Exception {
   bool get isConflict => statusCode == 409;
   bool get isValidation => statusCode == 400;
 
-  /// v1.1: 429 from `POST /auth/login` when the e-mail or IP is throttled
-  /// (contract 6.1, ADR 0022). Never a reason to end the session.
+  /// v2.1: 429 from `POST /auth/login` when the e-mail or IP is throttled
+  /// (contract 7.1), and from `PUT /auth/me/password` after too many wrong
+  /// current passwords (contract 7.3.4). Never a reason to end the session.
   bool get isTooManyRequests => statusCode == 429;
 
-  /// v1.1: 409 `stale-version` - the vehicle changed since it was loaded
-  /// (contract 6.2, ADR 0023).
+  /// v2.1: 409 `stale-version` - the record changed since it was loaded
+  /// (contract 7.2.3).
   bool get isStaleVersion => isConflict && hasType(staleVersionType);
 
-  /// `true` when the Problem Details `type` ends with `/errors/<suffix>`
-  /// (e.g. `stale-version`).
+  /// `true` when the Problem Details `type` ends with [suffix]
+  /// (e.g. `duplicate-email`).
   bool hasType(String suffix) => type?.endsWith('/errors/$suffix') ?? false;
 
   static const String staleVersionType = 'stale-version';

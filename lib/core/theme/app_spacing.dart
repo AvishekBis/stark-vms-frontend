@@ -23,6 +23,19 @@ abstract final class AppSpacing {
 
   /// Width of one label/value pair on a detail page.
   static const double detailFieldWidth = 200;
+
+  /// Width of a filter dropdown in a list header.
+  static const double filterWidth = 190;
+
+  /// Max width of dialogs with a form or a list.
+  static const double dialogMaxWidth = 560;
+
+  /// Height of the scrollable driver list in the assign dialog.
+  static const double dialogListHeight = 320;
+
+  /// Size of a dashboard statistic card.
+  static const double statCardMinWidth = 220;
+  static const double statCardHeight = 160;
 }
 
 /// Responsive breakpoints (guideline 14.2).

@@ -9,7 +9,7 @@ import 'package:stark_vms_frontend/features/auth/presentation/login_controller.d
 import '../helpers/fakes.dart';
 import '../helpers/recording_adapter.dart';
 
-/// v1.1 login throttling on the client (ADR 0022, contract 6.1): a 429 is
+/// v2.1 login throttling on the client (ADR 0022, contract 7.1): a 429 is
 /// shown with the server detail and never ends a session.
 void main() {
   const detail = 'Too many failed login attempts. Try again in 14 minutes.';

@@ -2,26 +2,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/network/api_exception.dart';
 import '../../../core/network/page_response.dart';
+import '../../../core/utils/change_tracker.dart';
 import '../../auth/presentation/auth_controller.dart';
 import '../data/vehicle.dart';
+import '../data/vehicle_enums.dart';
 import '../data/vehicle_query.dart';
 import '../data/vehicle_repository.dart';
 
-/// Incremented after every create / update / delete. Providers that show
-/// vehicle collections watch it, so one bump refreshes them all (list and
-/// dashboard).
-class VehicleChangeTracker extends Notifier<int> {
-  @override
-  int build() => 0;
-
-  void markChanged() => state++;
-}
-
-final vehicleChangesProvider = NotifierProvider<VehicleChangeTracker, int>(
-  VehicleChangeTracker.new,
-);
-
-/// Current page / size / sort / search of the vehicle list. Not auto-disposed,
+/// Current page / size / sort / search / filters of the vehicle list. Not auto-disposed,
 /// so it survives navigating away and back; it resets when another user
 /// logs in.
 class VehicleQueryController extends Notifier<VehicleQuery> {
@@ -37,6 +25,35 @@ class VehicleQueryController extends Notifier<VehicleQuery> {
       state = state.copyWith(search: trimmed, page: 0);
     }
   }
+
+  /// Any filter change starts again at the first page (FR-V09).
+  void setStatus(VehicleStatus? status) {
+    if (status != state.status) {
+      state = state.copyWith(status: status, page: 0);
+    }
+  }
+
+  void setType(VehicleType? type) {
+    if (type != state.type) {
+      state = state.copyWith(type: type, page: 0);
+    }
+  }
+
+  /// Shows exactly these filters (used by dashboard links and
+  /// `/vehicles?status=…&type=…`); search is cleared, sort is kept.
+  void showOnly({VehicleStatus? status, VehicleType? type}) {
+    final next = state.copyWith(
+      status: status,
+      type: type,
+      search: '',
+      page: 0,
+    );
+    if (next != state) {
+      state = next;
+    }
+  }
+
+  void clearFilters() => showOnly();
 
   /// Tapping the active column flips the direction; a new column starts
   /// ascending.
@@ -92,7 +109,7 @@ final vehicleDetailProvider = FutureProvider.autoDispose.family<Vehicle, int>((
   return ref.watch(vehicleRepositoryProvider).get(id);
 });
 
-/// Mutations that are not tied to the form: delete.
+/// Mutations that are not tied to the form: delete and status change.
 class VehicleActions {
   const VehicleActions(this._ref);
 
@@ -120,6 +137,33 @@ class VehicleActions {
         page.content.length == 1 &&
         page.content.single.id == vehicle.id;
   }
+
+  /// `PATCH /vehicles/{id}/status` (ADMIN, FR-V07). INACTIVE also ends the
+  /// current driver assignment, so drivers are refreshed too.
+  Future<Vehicle> changeStatus(Vehicle vehicle, VehicleStatus status) async {
+    final updated = await _ref
+        .read(vehicleRepositoryProvider)
+        .changeStatus(vehicle.id, status);
+    _ref.read(vehicleChangesProvider.notifier).markChanged();
+    _ref.read(driverChangesProvider.notifier).markChanged();
+    _ref.invalidate(vehicleDetailProvider(vehicle.id));
+    return updated;
+  }
+
+  static String statusErrorMessage(Object error) {
+    if (error is ApiException) {
+      return error.isForbidden
+          ? 'Only an administrator can change the vehicle status.'
+          : error.message;
+    }
+    return 'The status could not be changed. Please try again.';
+  }
+
+  /// `true` when the server refused a delete because of BR-10.
+  static bool hasHistory(Object error) =>
+      error is ApiException &&
+      error.isConflict &&
+      (error.type?.endsWith('vehicle-has-history') ?? false);
 
   /// A message for a failed delete that the UI can show as is.
   static String deleteErrorMessage(Object error) {

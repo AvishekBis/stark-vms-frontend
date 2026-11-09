@@ -15,6 +15,7 @@ class Vehicle {
     this.createdAt,
     this.updatedAt,
     this.createdBy,
+    this.currentDriver,
     this.version = 0,
   });
 
@@ -39,6 +40,7 @@ class Vehicle {
       createdAt: _parseTimestamp(json['createdAt']),
       updatedAt: _parseTimestamp(json['updatedAt']),
       createdBy: json['createdBy'] as String?,
+      currentDriver: DriverSummary.fromJsonOrNull(json['currentDriver']),
       version: (json['version'] as num?)?.toInt() ?? 0,
     );
   }
@@ -56,9 +58,12 @@ class Vehicle {
   final DateTime? updatedAt;
   final String? createdBy;
 
-  /// v1.1 optimistic locking (ADR 0023): the version as loaded. Sent back in
+  /// v2.0: the driver currently assigned (FR-DR02), `null` when none.
+  final DriverSummary? currentDriver;
+
+  /// v2.1 optimistic locking (ADR 0023): the version as loaded. Sent back in
   /// `PUT /vehicles/{id}`; a newer version on the server means 409
-  /// `stale-version`. A missing value reads as 0 (a new vehicle).
+  /// `stale-version`.
   final int version;
 
   /// "Toyota Axio", "Toyota", or `null` when both are missing.
@@ -69,6 +74,14 @@ class Vehicle {
         .where((part) => part.isNotEmpty);
     return parts.isEmpty ? null : parts.join(' ');
   }
+
+  /// BR-05: only an ACTIVE vehicle can get a driver.
+  bool get canReceiveDriver => status == VehicleStatus.active;
+
+  /// Moving to [next] ends the current driver assignment: going INACTIVE
+  /// from another status unassigns the driver on the server.
+  bool endsAssignmentOn(VehicleStatus next) =>
+      next == VehicleStatus.inactive && status != VehicleStatus.inactive;
 
   Map<String, dynamic> toJson() => {
     'id': id,
@@ -83,6 +96,7 @@ class Vehicle {
     'createdAt': createdAt?.toIso8601String(),
     'updatedAt': updatedAt?.toIso8601String(),
     'createdBy': createdBy,
+    if (currentDriver != null) 'currentDriver': currentDriver!.toJson(),
     'version': version,
   };
 
@@ -91,9 +105,38 @@ class Vehicle {
   }
 }
 
-/// The editable vehicle fields: [toJson] is the `CreateVehicleRequest` body
-/// (never with a `version`), [toUpdateJson] the `UpdateVehicleRequest` body,
-/// which also requires the loaded `version` (contract 6.2).
+/// `currentDriver` inside a VehicleResponse: `{id, fullName, phone}`.
+class DriverSummary {
+  const DriverSummary({required this.id, required this.fullName, this.phone});
+
+  static DriverSummary? fromJsonOrNull(Object? raw) {
+    if (raw is! Map<String, dynamic>) {
+      return null;
+    }
+    final id = raw['id'];
+    if (id is! num) {
+      return null;
+    }
+    return DriverSummary(
+      id: id.toInt(),
+      fullName: raw['fullName'] as String? ?? '',
+      phone: raw['phone'] as String?,
+    );
+  }
+
+  final int id;
+  final String fullName;
+  final String? phone;
+
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'fullName': fullName,
+    'phone': phone,
+  };
+}
+
+/// `CreateVehicleRequest`; `UpdateVehicleRequest` is the same plus
+/// `version` ([toUpdateJson], contract 7.2.2).
 class VehicleInput {
   const VehicleInput({
     required this.vehicleNumber,

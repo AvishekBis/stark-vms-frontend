@@ -1,14 +1,16 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/network/api_client.dart';
-import '../../../core/network/api_exception.dart';
 import '../../../core/network/network_providers.dart';
 import '../../../core/network/page_response.dart';
+import '../../../core/network/response_parsing.dart';
 import 'vehicle.dart';
+import 'vehicle_enums.dart';
 import 'vehicle_query.dart';
 
-/// Vehicle endpoints (FR-V01 … FR-V06). All data comes from the API.
+/// Vehicle endpoints (FR-V01 … FR-V09). All data comes from the API.
 abstract interface class VehicleRepository {
+  /// Server-side search, status / type filters, sort and pagination.
   Future<PageResponse<Vehicle>> list(VehicleQuery query);
 
   Future<Vehicle> get(int id);
@@ -19,8 +21,13 @@ abstract interface class VehicleRepository {
   /// 409 `stale-version` when someone else changed it meanwhile.
   Future<Vehicle> update(int id, VehicleInput input, {required int version});
 
-  /// ADMIN only; the server answers 403 for STAFF.
+  /// ADMIN only; the server answers 403 for STAFF and 409
+  /// `vehicle-has-history` when the vehicle has history (BR-10).
   Future<void> delete(int id);
+
+  /// `PATCH /vehicles/{id}/status` — ADMIN only (FR-V07). INACTIVE also
+  /// closes the current driver assignment on the server.
+  Future<Vehicle> changeStatus(int id, VehicleStatus status);
 }
 
 class ApiVehicleRepository implements VehicleRepository {
@@ -36,21 +43,22 @@ class ApiVehicleRepository implements VehicleRepository {
       _basePath,
       queryParameters: query.toQueryParameters(),
     );
-    return _parse(
-      () => PageResponse.fromJson(_asJsonObject(body), Vehicle.fromJson),
+    return ResponseParsing.parse(
+      () =>
+          PageResponse.fromJson(ResponseParsing.object(body), Vehicle.fromJson),
     );
   }
 
   @override
   Future<Vehicle> get(int id) async {
     final body = await _client.get('$_basePath/$id');
-    return _parse(() => Vehicle.fromJson(_asJsonObject(body)));
+    return _vehicle(body);
   }
 
   @override
   Future<Vehicle> create(VehicleInput input) async {
     final body = await _client.post(_basePath, body: input.toJson());
-    return _parse(() => Vehicle.fromJson(_asJsonObject(body)));
+    return _vehicle(body);
   }
 
   @override
@@ -63,33 +71,24 @@ class ApiVehicleRepository implements VehicleRepository {
       '$_basePath/$id',
       body: input.toUpdateJson(version),
     );
-    return _parse(() => Vehicle.fromJson(_asJsonObject(body)));
+    return _vehicle(body);
   }
 
   @override
   Future<void> delete(int id) => _client.delete('$_basePath/$id');
 
-  static Map<String, dynamic> _asJsonObject(Object? body) {
-    if (body is Map<String, dynamic>) {
-      return body;
-    }
-    throw const FormatException('Expected a JSON object.');
+  @override
+  Future<Vehicle> changeStatus(int id, VehicleStatus status) async {
+    final body = await _client.patch(
+      '$_basePath/$id/status',
+      body: {'status': status.apiValue},
+    );
+    return _vehicle(body);
   }
 
-  static const ApiException _unexpectedData = ApiException(
-    kind: ApiErrorKind.unknown,
-    message: 'The server sent data this app does not understand.',
+  static Vehicle _vehicle(Object? body) => ResponseParsing.parse(
+    () => Vehicle.fromJson(ResponseParsing.object(body)),
   );
-
-  static T _parse<T>(T Function() parse) {
-    try {
-      return parse();
-    } on FormatException {
-      throw _unexpectedData;
-    } on TypeError {
-      throw _unexpectedData;
-    }
-  }
 }
 
 final vehicleRepositoryProvider = Provider<VehicleRepository>(

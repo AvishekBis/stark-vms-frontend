@@ -1,3 +1,5 @@
+import '../../../core/utils/enum_parsing.dart';
+
 /// User roles (section 4 of the guideline).
 enum UserRole {
   admin('ADMIN', 'Admin'),
@@ -9,14 +11,8 @@ enum UserRole {
   final String label;
 
   /// Unknown roles get the least privileges.
-  static UserRole fromApi(Object? value) {
-    for (final role in values) {
-      if (role.apiValue == value) {
-        return role;
-      }
-    }
-    return UserRole.staff;
-  }
+  static UserRole fromApi(Object? value) =>
+      tryParseApiEnum(values, (role) => role.apiValue, value) ?? UserRole.staff;
 }
 
 /// The logged-in user, from `user` in the login response and `GET /auth/me`.

@@ -8,18 +8,37 @@ import '../../../core/router/app_routes.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/utils/debouncer.dart';
 import '../../../core/utils/formatters.dart';
+import '../../../shared/widgets/data_table_frame.dart';
+import '../../../shared/widgets/filter_menu.dart';
 import '../../../shared/widgets/pagination_bar.dart';
+import '../../../shared/widgets/row_actions.dart';
+import '../../../shared/widgets/sort_menu.dart';
 import '../../../shared/widgets/state_views.dart';
 import '../../auth/presentation/auth_controller.dart';
 import '../data/vehicle.dart';
+import '../data/vehicle_enums.dart';
 import '../data/vehicle_query.dart';
 import 'vehicle_providers.dart';
 import 'widgets/delete_vehicle_flow.dart';
 import 'widgets/vehicle_status_badge.dart';
 
-/// Vehicle list (FR-V01) with server-side search, sort and pagination.
+/// Vehicle list (FR-V01, FR-V08, FR-V09): server-side search (number,
+/// brand, model, driver), status / type filters, sort and pagination.
 class VehicleListScreen extends ConsumerStatefulWidget {
-  const VehicleListScreen({super.key});
+  const VehicleListScreen({
+    super.key,
+    this.routeStatus,
+    this.routeType,
+    this.hasRouteFilters = false,
+  });
+
+  /// From `/vehicles?status=MAINTENANCE&type=BUS` (dashboard links).
+  final VehicleStatus? routeStatus;
+  final VehicleType? routeType;
+
+  /// `true` when the URL carried filter parameters; they then replace the
+  /// remembered filters. Without parameters the remembered state is kept.
+  final bool hasRouteFilters;
 
   @override
   ConsumerState<VehicleListScreen> createState() => _VehicleListScreenState();
@@ -35,6 +54,39 @@ class _VehicleListScreenState extends ConsumerState<VehicleListScreen> {
     _searchController = TextEditingController(
       text: ref.read(vehicleQueryProvider).search,
     );
+    if (widget.hasRouteFilters) {
+      _applyRouteFilters();
+    }
+  }
+
+  @override
+  void didUpdateWidget(VehicleListScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.hasRouteFilters &&
+        (widget.routeStatus != oldWidget.routeStatus ||
+            widget.routeType != oldWidget.routeType)) {
+      _applyRouteFilters();
+    }
+  }
+
+  /// Applied after the frame: providers may not change while building.
+  void _applyRouteFilters() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) {
+        return;
+      }
+      final query = ref.read(vehicleQueryProvider);
+      if (query.status != widget.routeStatus ||
+          query.type != widget.routeType ||
+          query.search.isNotEmpty ||
+          query.page != 0) {
+        _searchDebouncer.cancel();
+        _searchController.clear();
+        ref
+            .read(vehicleQueryProvider.notifier)
+            .showOnly(status: widget.routeStatus, type: widget.routeType);
+      }
+    });
   }
 
   @override
@@ -111,7 +163,12 @@ class _VehicleListScreenState extends ConsumerState<VehicleListScreen> {
                 isEmpty: (page) => page.totalElements == 0 && page.isEmpty,
                 empty: _EmptyVehicles(
                   search: query.search,
+                  hasFilters: query.hasFilters,
                   onClearSearch: _clearSearch,
+                  onClearFilters: () {
+                    _clearSearch();
+                    ref.read(vehicleQueryProvider.notifier).clearFilters();
+                  },
                 ),
                 data: (page) => _VehicleResults(
                   page: page,
@@ -154,7 +211,7 @@ class _ListHeader extends ConsumerWidget {
       onSubmitted: onSearchSubmitted,
       textInputAction: TextInputAction.search,
       decoration: InputDecoration(
-        hintText: 'Search by vehicle number',
+        hintText: 'Search number, brand, model or driver',
         prefixIcon: const Icon(Icons.search),
         isDense: true,
         suffixIcon: ValueListenableBuilder<TextEditingValue>(
@@ -189,7 +246,30 @@ class _ListHeader extends ConsumerWidget {
               ),
               child: searchField,
             ),
-            _SortMenu(query: query),
+            FilterMenu<VehicleStatus>(
+              key: const Key('vehicles.statusFilter'),
+              label: 'Status',
+              options: VehicleStatus.values,
+              optionLabel: (status) => status.label,
+              selected: query.status,
+              onChanged: ref.read(vehicleQueryProvider.notifier).setStatus,
+            ),
+            FilterMenu<VehicleType>(
+              key: const Key('vehicles.typeFilter'),
+              label: 'Type',
+              options: VehicleType.values,
+              optionLabel: (type) => type.label,
+              selected: query.type,
+              onChanged: ref.read(vehicleQueryProvider.notifier).setType,
+            ),
+            SortMenu<VehicleSortField>(
+              key: const Key('vehicles.sortMenu'),
+              values: VehicleSortField.values,
+              label: (field) => field.label,
+              field: query.sortField,
+              direction: query.sortDirection,
+              onSelected: ref.read(vehicleQueryProvider.notifier).setSort,
+            ),
             if (showRegisterButton)
               FilledButton.icon(
                 key: const Key('vehicles.register'),
@@ -204,80 +284,40 @@ class _ListHeader extends ConsumerWidget {
   }
 }
 
-/// Sort picker; on narrow screens there are no column headers to tap.
-class _SortMenu extends ConsumerWidget {
-  const _SortMenu({required this.query});
-
-  final VehicleQuery query;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return PopupMenuButton<(VehicleSortField, SortDirection)>(
-      key: const Key('vehicles.sortMenu'),
-      tooltip: 'Sort',
-      onSelected: (choice) =>
-          ref.read(vehicleQueryProvider.notifier).setSort(choice.$1, choice.$2),
-      itemBuilder: (context) => [
-        for (final field in VehicleSortField.values)
-          for (final direction in SortDirection.values)
-            CheckedPopupMenuItem<(VehicleSortField, SortDirection)>(
-              value: (field, direction),
-              checked:
-                  query.sortField == field && query.sortDirection == direction,
-              child: _SortLabel(field: field, direction: direction),
-            ),
-      ],
-      child: Chip(
-        avatar: const Icon(Icons.sort),
-        label: _SortLabel(
-          field: query.sortField,
-          direction: query.sortDirection,
-        ),
-      ),
-    );
-  }
-}
-
-/// "Date added" plus an arrow icon. An icon, not a '↑'/'↓' character: the
-/// bundled text font has no arrow glyphs, so Flutter Web drew an empty box
-/// until (or unless) a fallback font was downloaded.
-class _SortLabel extends StatelessWidget {
-  const _SortLabel({required this.field, required this.direction});
-
-  final VehicleSortField field;
-  final SortDirection direction;
-
-  @override
-  Widget build(BuildContext context) {
-    final ascending = direction == SortDirection.ascending;
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(field.label),
-        const SizedBox(width: AppSpacing.xs),
-        Icon(
-          ascending ? Icons.arrow_upward : Icons.arrow_downward,
-          size: 16,
-          semanticLabel: ascending ? 'ascending' : 'descending',
-        ),
-      ],
-    );
-  }
-}
-
 class _EmptyVehicles extends StatelessWidget {
-  const _EmptyVehicles({required this.search, required this.onClearSearch});
+  const _EmptyVehicles({
+    required this.search,
+    required this.hasFilters,
+    required this.onClearSearch,
+    required this.onClearFilters,
+  });
 
   final String search;
+  final bool hasFilters;
   final VoidCallback onClearSearch;
+  final VoidCallback onClearFilters;
 
   @override
   Widget build(BuildContext context) {
+    if (hasFilters) {
+      return EmptyView(
+        icon: Icons.filter_alt_off_outlined,
+        title: search.isEmpty
+            ? 'No vehicles match the filters'
+            : 'No vehicles match "$search" with these filters',
+        message: 'Change or clear the status and type filters.',
+        action: OutlinedButton(
+          key: const Key('vehicles.clearFilters'),
+          onPressed: onClearFilters,
+          child: const Text('Clear filters'),
+        ),
+      );
+    }
     if (search.isNotEmpty) {
       return EmptyView(
         icon: Icons.search_off,
         title: 'No vehicles match "$search"',
-        message: 'Try a different vehicle number.',
+        message: 'Try another number, brand, model or driver name.',
         action: OutlinedButton(
           onPressed: onClearSearch,
           child: const Text('Clear search'),
@@ -404,6 +444,7 @@ class _VehicleTable extends StatelessWidget {
       ),
       if (isFull) const _Column('Fuel'),
       const _Column('Status'),
+      const _Column('Driver'),
       if (isFull) const _Column('Added', sortField: VehicleSortField.createdAt),
       const _Column('Actions'),
     ];
@@ -411,65 +452,52 @@ class _VehicleTable extends StatelessWidget {
       (column) => column.sortField == query.sortField,
     );
 
-    return LayoutBuilder(
-      builder: (context, constraints) => SingleChildScrollView(
-        child: SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: ConstrainedBox(
-            constraints: BoxConstraints(minWidth: constraints.maxWidth),
-            child: Card(
-              clipBehavior: Clip.antiAlias,
-              child: DataTable(
-                key: const Key('vehicles.table'),
-                showCheckboxColumn: false,
-                sortColumnIndex: sortIndex < 0 ? null : sortIndex,
-                sortAscending: query.sortDirection == SortDirection.ascending,
-                columns: [
-                  for (final column in columns)
-                    DataColumn(
-                      label: Text(column.label),
-                      numeric: column.numeric,
-                      onSort: column.sortField == null
-                          ? null
-                          : (_, _) => onSort(column.sortField!),
-                    ),
-                ],
-                rows: [
-                  for (final vehicle in vehicles)
-                    DataRow(
-                      key: ValueKey('vehicle.row.${vehicle.id}'),
-                      onSelectChanged: (_) => onOpen(vehicle),
-                      cells: [
-                        DataCell(Text(vehicle.vehicleNumber)),
-                        DataCell(Text(vehicle.vehicleType.label)),
-                        DataCell(
-                          Text(Formatters.orMissing(vehicle.brandModel)),
-                        ),
-                        DataCell(
-                          Text(Formatters.orMissing(vehicle.manufactureYear)),
-                        ),
-                        if (isFull)
-                          DataCell(
-                            Text(Formatters.orMissing(vehicle.fuelType?.label)),
-                          ),
-                        DataCell(VehicleStatusBadge(status: vehicle.status)),
-                        if (isFull)
-                          DataCell(Text(Formatters.date(vehicle.createdAt))),
-                        DataCell(
-                          _RowActions(
-                            vehicle: vehicle,
-                            isAdmin: isAdmin,
-                            onEdit: onEdit,
-                            onDelete: onDelete,
-                          ),
-                        ),
-                      ],
-                    ),
-                ],
-              ),
+    return DataTableFrame(
+      table: DataTable(
+        key: const Key('vehicles.table'),
+        showCheckboxColumn: false,
+        columnSpacing: AppSpacing.md,
+        sortColumnIndex: sortIndex < 0 ? null : sortIndex,
+        sortAscending: query.sortDirection == SortDirection.ascending,
+        columns: [
+          for (final column in columns)
+            DataColumn(
+              label: Text(column.label),
+              numeric: column.numeric,
+              onSort: column.sortField == null
+                  ? null
+                  : (_, _) => onSort(column.sortField!),
             ),
-          ),
-        ),
+        ],
+        rows: [
+          for (final vehicle in vehicles)
+            DataRow(
+              key: ValueKey('vehicle.row.${vehicle.id}'),
+              onSelectChanged: (_) => onOpen(vehicle),
+              cells: [
+                DataCell(Text(vehicle.vehicleNumber)),
+                DataCell(Text(vehicle.vehicleType.label)),
+                DataCell(Text(Formatters.orMissing(vehicle.brandModel))),
+                DataCell(Text(Formatters.orMissing(vehicle.manufactureYear))),
+                if (isFull)
+                  DataCell(Text(Formatters.orMissing(vehicle.fuelType?.label))),
+                DataCell(VehicleStatusBadge(status: vehicle.status)),
+                DataCell(
+                  Text(Formatters.orMissing(vehicle.currentDriver?.fullName)),
+                ),
+                if (isFull) DataCell(Text(Formatters.date(vehicle.createdAt))),
+                DataCell(
+                  RowActions(
+                    keyPrefix: 'vehicle',
+                    id: vehicle.id,
+                    isAdmin: isAdmin,
+                    onEdit: () => onEdit(vehicle),
+                    onDelete: () => onDelete(vehicle),
+                  ),
+                ),
+              ],
+            ),
+        ],
       ),
     );
   }
@@ -481,43 +509,6 @@ class _Column {
   final String label;
   final VehicleSortField? sortField;
   final bool numeric;
-}
-
-class _RowActions extends StatelessWidget {
-  const _RowActions({
-    required this.vehicle,
-    required this.isAdmin,
-    required this.onEdit,
-    required this.onDelete,
-  });
-
-  final Vehicle vehicle;
-  final bool isAdmin;
-  final _VehicleCallback onEdit;
-  final _VehicleCallback onDelete;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        IconButton(
-          key: ValueKey('vehicle.edit.${vehicle.id}'),
-          tooltip: 'Edit',
-          onPressed: () => onEdit(vehicle),
-          icon: const Icon(Icons.edit_outlined),
-        ),
-        if (isAdmin)
-          IconButton(
-            key: ValueKey('vehicle.delete.${vehicle.id}'),
-            tooltip: 'Delete',
-            color: Theme.of(context).colorScheme.error,
-            onPressed: () => onDelete(vehicle),
-            icon: const Icon(Icons.delete_outline),
-          ),
-      ],
-    );
-  }
 }
 
 class _VehicleCards extends StatelessWidget {
@@ -572,16 +563,25 @@ class _VehicleCards extends StatelessWidget {
                         ),
                         const SizedBox(height: AppSpacing.xs),
                         Text(details, style: textTheme.bodySmall),
+                        const SizedBox(height: AppSpacing.xs),
+                        Text(
+                          vehicle.currentDriver == null
+                              ? 'No driver assigned'
+                              : 'Driver: ${vehicle.currentDriver!.fullName}',
+                          key: ValueKey('vehicle.card.driver.${vehicle.id}'),
+                          style: textTheme.bodySmall,
+                        ),
                         const SizedBox(height: AppSpacing.sm),
                         VehicleStatusBadge(status: vehicle.status),
                       ],
                     ),
                   ),
-                  _RowActions(
-                    vehicle: vehicle,
+                  RowActions(
+                    keyPrefix: 'vehicle',
+                    id: vehicle.id,
                     isAdmin: isAdmin,
-                    onEdit: onEdit,
-                    onDelete: onDelete,
+                    onEdit: () => onEdit(vehicle),
+                    onDelete: () => onDelete(vehicle),
                   ),
                 ],
               ),

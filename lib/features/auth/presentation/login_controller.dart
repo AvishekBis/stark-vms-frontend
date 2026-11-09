@@ -28,7 +28,7 @@ class LoginController extends AutoDisposeAsyncNotifier<void> {
     }
   }
 
-  /// 401 → the generic credentials message. 429 (v1.1, ADR 0022) → the
+  /// 401 → the generic credentials message. 429 (v2.1, ADR 0022) → the
   /// server `detail` ("Too many failed login attempts. Try again in N
   /// minutes."), never "invalid credentials". Anything else → its message.
   static String _messageFor(ApiException error) {

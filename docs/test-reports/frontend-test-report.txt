@@ -1,112 +1,535 @@
 Stark VMS frontend - flutter test --reporter expanded
-Run on 2026-11-08 in stark-vms-frontend/ (Flutter 3.47.7), v1.1 (ADR 0022 login throttling, ADR 0023 optimistic locking; re-run after the backend security-review fixes, no frontend change). Result: 106 tests, all passed; flutter analyze: No issues found; dart format: 0 changed.
+Run on 2026-11-08 in stark-vms-frontend/ (Flutter 3.47.7), release v2.1 (with the fixes after the security review of 2026-11-08). Result: 315 tests, all passed; flutter analyze: No issues found; dart format: 0 changed.
 Absolute paths are shortened to paths relative to stark-vms-frontend/.
 
+Resolving dependencies...
+Downloading packages...
+  code_assets 2.1.0 (2.2.0 available)
+  cross_file 0.3.5+5 (0.4.0 available)
+  file_picker 13.1.0 (13.3.2 available)
+  flutter_riverpod 2.6.1 (3.5.0 available)
+  go_router 18.1.2 (18.1.3 available)
+  material_color_utilities 0.13.0 (0.13.1 available)
+  objective_c 9.6.2 (9.6.3 available)
+  riverpod 2.6.1 (3.5.0 available)
+  test_api 0.7.12 (0.7.15 available)
+  web 1.1.1 (1.1.2 available)
+Got dependencies!
+10 packages have newer versions incompatible with dependency constraints.
+Try `flutter pub outdated` for more information.
 00:00 +0: loading test/unit/api_client_test.dart
 00:00 +0: test/unit/api_client_test.dart: ApiClient (guideline 14.2: one client adds the JWT) adds the bearer token and sends query parameters
 00:00 +1: test/unit/api_client_test.dart: ApiClient (guideline 14.2: one client adds the JWT) adds the bearer token and sends query parameters
-00:00 +2: test/unit/api_client_test.dart: ApiClient (guideline 14.2: one client adds the JWT) adds the bearer token and sends query parameters
-00:00 +3: test/unit/api_client_test.dart: ApiClient (guideline 14.2: one client adds the JWT) adds the bearer token and sends query parameters
-00:00 +4: test/unit/api_exception_test.dart: ApiException.fromProblemDetails uses the HTTP status and a default message for a non-JSON body
-00:00 +5: test/unit/api_client_test.dart: ApiClient (guideline 14.2: one client adds the JWT) sends no Authorization header without a token
-00:00 +6: test/unit/api_exception_test.dart: ApiException.fromProblemDetails falls back to the title when detail is missing
-00:00 +7: test/unit/api_client_test.dart: ApiClient (guideline 14.2: one client adds the JWT) a 401 on a protected call signs the user out (FR-AUTH-02)
-00:00 +8: test/unit/api_client_test.dart: ApiClient (guideline 14.2: one client adds the JWT) a 401 on a protected call signs the user out (FR-AUTH-02)
-00:00 +9: test/unit/api_client_test.dart: ApiClient (guideline 14.2: one client adds the JWT) a 401 on a protected call signs the user out (FR-AUTH-02)
-00:00 +10: test/unit/api_client_test.dart: ApiClient (guideline 14.2: one client adds the JWT) a 401 on a protected call signs the user out (FR-AUTH-02)
-00:00 +11: test/unit/app_config_test.dart: the demo credentials hint is off by default in release builds
-00:00 +12: test/unit/api_client_test.dart: ApiClient (guideline 14.2: one client adds the JWT) a 401 from login is a wrong password, not an expiry
-00:00 +13: test/unit/api_client_test.dart: ApiClient (guideline 14.2: one client adds the JWT) a 403 does not sign the user out (TC-07)
+00:00 +2: test/unit/api_client_test.dart: ApiClient (guideline 14.2: one client adds the JWT) sends no Authorization header without a token
+00:00 +3: test/unit/api_client_test.dart: ApiClient (guideline 14.2: one client adds the JWT) a 401 on a protected call signs the user out (FR-AUTH-02)
+00:00 +4: test/unit/api_client_test.dart: ApiClient (guideline 14.2: one client adds the JWT) a 401 from login is a wrong password, not an expiry
+00:00 +5: test/unit/api_client_test.dart: ApiClient (guideline 14.2: one client adds the JWT) a 403 does not sign the user out (TC-07)
+00:00 +6: test/unit/api_exception_test.dart: ApiException.fromProblemDetails parses a 409 duplicate with errors[] (FR-V05)
+00:00 +7: test/unit/auth_controller_test.dart: AuthController (FR-AUTH-01, FR-AUTH-02) starts signed out without a stored session
+00:00 +8: test/unit/auth_controller_test.dart: AuthController (FR-AUTH-01, FR-AUTH-02) starts signed out without a stored session
+00:00 +9: test/unit/auth_controller_test.dart: AuthController (FR-AUTH-01, FR-AUTH-02) starts signed out without a stored session
+00:00 +10: test/unit/auth_controller_test.dart: AuthController (FR-AUTH-01, FR-AUTH-02) starts signed out without a stored session
+00:00 +11: test/unit/auth_controller_test.dart: AuthController (FR-AUTH-01, FR-AUTH-02) starts signed out without a stored session
+00:00 +12: test/unit/auth_controller_test.dart: AuthController (FR-AUTH-01, FR-AUTH-02) starts signed out without a stored session
+00:00 +13: test/unit/auth_controller_test.dart: AuthController (FR-AUTH-01, FR-AUTH-02) starts signed out without a stored session
 00:00 +14: test/unit/auth_controller_test.dart: AuthController (FR-AUTH-01, FR-AUTH-02) starts signed out without a stored session
 00:00 +15: test/unit/auth_controller_test.dart: AuthController (FR-AUTH-01, FR-AUTH-02) login stores the session and the token
-00:00 +16: test/unit/auth_models_test.dart: LoginResponse.fromJson (FR-AUTH-01) parses token, expiry and user
-00:00 +17: test/unit/auth_models_test.dart: LoginResponse.fromJson (FR-AUTH-01) parses token, expiry and user
-00:00 +18: test/unit/auth_models_test.dart: LoginResponse.fromJson (FR-AUTH-01) parses token, expiry and user
-00:00 +19: test/unit/auth_models_test.dart: LoginResponse.fromJson (FR-AUTH-01) parses token, expiry and user
-00:00 +20: test/unit/auth_controller_test.dart: AuthController (FR-AUTH-01, FR-AUTH-02) logout clears the token
-00:00 +21: test/unit/auth_controller_test.dart: AuthController (FR-AUTH-01, FR-AUTH-02) logout clears the token
-00:00 +22: test/unit/auth_models_test.dart: LoginResponse.fromJson (FR-AUTH-01) unknown role gets the least privileges
-00:00 +23: test/unit/auth_models_test.dart: LoginResponse.fromJson (FR-AUTH-01) rejects a response without token
-00:00 +24: test/unit/auth_models_test.dart: AuthSession expires after expiresIn (FR-AUTH-02)
-00:00 +25: test/unit/auth_models_test.dart: AuthSession survives a JSON round trip for storage
-00:01 +26: test/unit/auth_redirect_test.dart: authRedirect (FR-AUTH-02) signed-out users are sent to login, keeping the target
-00:01 +27: test/unit/auth_redirect_test.dart: authRedirect (FR-AUTH-02) signed-in users leave login for the target or the dashboard
-00:01 +28: test/unit/auth_redirect_test.dart: authRedirect (FR-AUTH-02) external redirect targets are ignored
-00:01 +29: test/unit/auth_redirect_test.dart: authRedirect (FR-AUTH-02) while the session is restored the splash screen is shown
-00:02 +30: test/unit/login_throttling_test.dart: a 429 Problem Details keeps the detail and is not a 401
-00:02 +31: test/unit/login_throttling_test.dart: a 429 without a body still gets a helpful message
-00:02 +32: test/unit/login_throttling_test.dart: a 429 from login (or anywhere) never triggers the 401 sign-out
-00:02 +33: test/unit/login_throttling_test.dart: LoginController shows the 429 detail, not "invalid credentials"
-00:02 +34: test/unit/optimistic_locking_test.dart: version in VehicleResponse is parsed
-00:02 +35: test/unit/optimistic_locking_test.dart: version in VehicleResponse a missing version reads as 0 (new vehicle)
-00:02 +36: test/unit/optimistic_locking_test.dart: version in request bodies the update body carries the version, the create body does not
-00:02 +37: test/unit/optimistic_locking_test.dart: version in request bodies ApiVehicleRepository sends version in PUT and not in POST
-00:02 +38: test/unit/optimistic_locking_test.dart: version in request bodies ApiVehicleRepository sends version in PUT and not in POST
-00:02 +39: test/unit/optimistic_locking_test.dart: version in request bodies ApiVehicleRepository sends version in PUT and not in POST
-00:02 +40: test/unit/optimistic_locking_test.dart: version in request bodies ApiVehicleRepository sends version in PUT and not in POST
-00:02 +41: test/unit/optimistic_locking_test.dart: 409 stale-version ApiException.isStaleVersion matches only that 409
-00:02 +42: test/unit/optimistic_locking_test.dart: VehicleFormController updates with the version the vehicle was loaded with
-00:02 +43: test/unit/optimistic_locking_test.dart: VehicleFormController a create never goes through update
-00:02 +44: test/unit/optimistic_locking_test.dart: VehicleFormController a stale save sets isStale, not a field or general error
-00:02 +45: test/unit/optimistic_locking_test.dart: VehicleFormController any other 409 stays a normal error
-00:03 +46: test/unit/validators_test.dart: VehicleValidators.vehicleNumber (BR-03) requires a value
-00:03 +47: test/unit/validators_test.dart: VehicleValidators.vehicleNumber (BR-03) accepts typical Bangladeshi formats
-00:03 +48: test/unit/validators_test.dart: VehicleValidators.vehicleNumber (BR-03) must contain at least one letter or digit
-00:03 +49: test/unit/vehicle_model_test.dart: Vehicle.fromJson (FR-V01) parses a full VehicleResponse
-00:03 +50: test/unit/vehicle_model_test.dart: Vehicle.fromJson (FR-V01) parses a full VehicleResponse
-00:03 +51: test/unit/vehicle_model_test.dart: Vehicle.fromJson (FR-V01) parses a full VehicleResponse
-00:03 +52: test/unit/vehicle_model_test.dart: Vehicle.fromJson (FR-V01) parses a full VehicleResponse
-00:03 +53: test/unit/vehicle_model_test.dart: Vehicle.fromJson (FR-V01) parses a full VehicleResponse
-00:03 +54: test/unit/vehicle_model_test.dart: Vehicle.fromJson (FR-V01) parses a full VehicleResponse
-00:03 +55: test/unit/validators_test.dart: optional text max lengths brand and model max 50, colour max 30
-00:03 +56: test/unit/vehicle_model_test.dart: Vehicle.fromJson (FR-V01) accepts null optional fields
-00:03 +57: test/unit/validators_test.dart: login validators email must be present and well formed
-00:03 +58: test/unit/vehicle_model_test.dart: Vehicle.fromJson (FR-V01) rejects a body without id or vehicle number
-00:03 +59: test/unit/vehicle_model_test.dart: Vehicle.fromJson (FR-V01) rejects a body without id or vehicle number
-00:03 +60: test/unit/vehicle_model_test.dart: Vehicle.fromJson (FR-V01) rejects unknown enum values
-00:03 +61: test/unit/vehicle_model_test.dart: Vehicle.fromJson (FR-V01) toJson round-trips
-00:03 +62: test/unit/vehicle_model_test.dart: VehicleInput.toJson trims text and sends blank optional fields as null
-00:04 +63: test/unit/vehicle_query_test.dart: VehicleQuery.toQueryParameters defaults to page 0, size 20, newest first
-00:04 +64: test/unit/vehicle_query_test.dart: VehicleQuery.toQueryParameters adds a trimmed search and caps the size at 100
-00:04 +65: test/unit/vehicle_query_test.dart: VehicleQueryController a new search goes back to the first page
-00:04 +66: test/unit/vehicle_query_test.dart: VehicleQueryController tapping the same column flips the direction, a new column starts ascending
-00:04 +67: test/unit/vehicle_query_test.dart: VehicleQueryController changing the page size resets the page
-00:04 +68: test/widget/login_screen_test.dart: validates email and password before calling the API
-00:05 +69: test/widget/login_screen_test.dart: validates email and password before calling the API
-00:06 +70: test/widget/login_screen_test.dart: validates email and password before calling the API
-00:07 +71: test/widget/login_screen_test.dart: validates email and password before calling the API
-00:08 +72: test/widget/login_screen_test.dart: validates email and password before calling the API
-00:08 +73: test/widget/login_screen_test.dart: validates email and password before calling the API
-00:08 +74: test/widget/login_screen_test.dart: validates email and password before calling the API
-00:08 +75: test/widget/login_screen_test.dart: validates email and password before calling the API
-00:08 +76: test/widget/login_screen_test.dart: validates email and password before calling the API
-00:08 +77: test/widget/stale_version_test.dart: the dialog shows the server detail and Cancel keeps the edits
-00:09 +78: test/widget/stale_version_test.dart: the dialog shows the server detail and Cancel keeps the edits
-00:09 +79: test/widget/stale_version_test.dart: the dialog shows the server detail and Cancel keeps the edits
-00:09 +80: test/widget/stale_version_test.dart: the dialog shows the server detail and Cancel keeps the edits
-00:10 +81: test/widget/vehicle_form_screen_test.dart: validates required fields on the client (BR-03)
-00:10 +82: test/widget/vehicle_form_screen_test.dart: validates required fields on the client (BR-03)
-00:10 +83: test/widget/vehicle_form_screen_test.dart: validates required fields on the client (BR-03)
-00:10 +84: test/widget/vehicle_form_screen_test.dart: validates required fields on the client (BR-03)
-00:10 +85: test/widget/vehicle_form_screen_test.dart: validates required fields on the client (BR-03)
-00:11 +86: test/widget/vehicle_form_screen_test.dart: validates required fields on the client (BR-03)
-00:11 +87: test/widget/vehicle_list_screen_test.dart: renders rows from the repository with status badges (FR-V01)
-00:12 +88: test/widget/vehicle_form_screen_test.dart: shows the server duplicate error under the vehicle number (FR-V05)
-00:13 +89: test/widget/vehicle_list_screen_test.dart: STAFF sees Edit but not Delete (FR-V04)
-00:13 +90: test/widget/vehicle_form_screen_test.dart: edit mode is prefilled from the API (FR-V03)
-00:13 +91: test/widget/vehicle_list_screen_test.dart: ADMIN sees Delete
-00:13 +92: test/widget/vehicle_form_screen_test.dart: a successful save navigates to the vehicle (FR-V02)
-00:14 +93: test/widget/vehicle_list_screen_test.dart: ADMIN delete asks for confirmation and refreshes the list
-00:14 +94: test/widget/vehicle_form_screen_test.dart: server 400 field errors appear under the right field (TC-05)
-00:15 +95: test/widget/vehicle_list_screen_test.dart: search is debounced and sent to the server
-00:15 +96: test/widget/vehicle_form_screen_test.dart: a network failure on save is reported, form stays filled
-00:15 +97: test/widget/vehicle_form_screen_test.dart: a network failure on save is reported, form stays filled
-00:16 +98: test/widget/vehicle_list_screen_test.dart: shows the empty state when there are no vehicles
-00:16 +99: test/widget/vehicle_list_screen_test.dart: fast typing sends one request, not one per keystroke
-00:16 +100: test/widget/vehicle_list_screen_test.dart: Enter in the search field searches at once
-00:17 +101: test/widget/vehicle_list_screen_test.dart: tapping a column header sorts on the server
-00:17 +102: test/widget/vehicle_list_screen_test.dart: pagination asks the server for the next page
-00:19 +103: test/widget/vehicle_list_screen_test.dart: 600-1024 px shows the compact table with brand/model
-00:19 +104: test/widget/vehicle_list_screen_test.dart: wider than 1024 px shows the full table
-00:19 +105: test/widget/vehicle_list_screen_test.dart: cancelling the delete dialog keeps the vehicle
-00:19 +106: All tests passed!
+00:00 +16: test/unit/auth_controller_test.dart: AuthController (FR-AUTH-01, FR-AUTH-02) restores an unexpired session after a reload
+00:00 +17: test/unit/auth_controller_test.dart: AuthController (FR-AUTH-01, FR-AUTH-02) an expired stored session signs out with a notice
+00:00 +18: test/unit/auth_controller_test.dart: AuthController (FR-AUTH-01, FR-AUTH-02) a 401 from any request signs out with "session expired"
+00:00 +19: test/unit/auth_controller_test.dart: AuthController (FR-AUTH-01, FR-AUTH-02) logout clears the token
+00:01 +20: test/unit/auth_models_test.dart: LoginResponse.fromJson (FR-AUTH-01) parses token, expiry and user
+00:01 +21: test/unit/auth_models_test.dart: LoginResponse.fromJson (FR-AUTH-01) defaults missing tokenType and expiresIn, falls back to email for name
+00:01 +22: test/unit/auth_models_test.dart: LoginResponse.fromJson (FR-AUTH-01) unknown role gets the least privileges
+00:01 +23: test/unit/auth_models_test.dart: LoginResponse.fromJson (FR-AUTH-01) rejects a response without token
+00:01 +24: test/unit/auth_models_test.dart: AuthSession expires after expiresIn (FR-AUTH-02)
+00:01 +25: test/unit/auth_models_test.dart: AuthSession survives a JSON round trip for storage
+00:02 +26: test/unit/auth_redirect_test.dart: authRedirect (FR-AUTH-02) signed-out users are sent to login, keeping the target
+00:02 +27: test/unit/auth_redirect_test.dart: authRedirect (FR-AUTH-02) signed-in users leave login for the target or the dashboard
+00:02 +28: test/unit/auth_redirect_test.dart: authRedirect (FR-AUTH-02) external redirect targets are ignored
+00:02 +29: test/unit/auth_redirect_test.dart: authRedirect (FR-AUTH-02) while the session is restored the splash screen is shown
+00:03 +30: test/unit/business_date_test.dart: Dates.businessToday (Asia/Dhaka, UTC+6) is the Dhaka date whatever the browser time zone is
+00:03 +31: test/unit/business_date_test.dart: ExpiringDocumentsQueryController.showWithin a dashboard link always opens the first page of that window
+00:03 +32: test/unit/dashboard_summary_test.dart: parses the full summary (FR-DB01, FR-X02)
+00:03 +33: test/unit/dashboard_summary_test.dart: empty lists and missing sections become zeros
+00:03 +34: test/unit/dashboard_summary_test.dart: integer costs are read as doubles
+00:03 +35: test/unit/document_model_test.dart: VehicleDocument.fromJson parses a DocumentResponse
+00:04 +36: test/unit/document_model_test.dart: VehicleDocument.fromJson optional fields may be null; unknown type becomes Other
+00:04 +37: test/unit/document_model_test.dart: VehicleDocument.fromJson expiry date is required
+00:04 +38: test/unit/document_model_test.dart: DocumentUploadRules (BR-07, client side) PDF, JPG, JPEG and PNG up to 5 MB are accepted
+00:04 +39: test/unit/document_model_test.dart: DocumentUploadRules (BR-07, client side) larger than 5 MB is rejected
+00:04 +40: test/unit/document_model_test.dart: DocumentUploadRules (BR-07, client side) other extensions are rejected
+00:04 +41: test/unit/document_model_test.dart: DocumentUploadRules (BR-07, client side) no file and an empty file are rejected
+00:04 +42: test/unit/document_model_test.dart: DocumentUploadRules (BR-07, client side) expiry before issue is rejected, same day is fine
+00:04 +43: test/unit/document_model_test.dart: DocumentUploadRules (BR-07, client side) declared content type follows the extension
+00:04 +44: test/unit/document_model_test.dart: multipart body has the contract parts
+00:04 +45: test/unit/document_model_test.dart: file name from Content-Disposition
+00:04 +46: test/unit/document_model_test.dart: a 403 shows the delete message only for a delete
+00:04 +47: test/unit/driver_actions_test.dart: DriverActions.deactivate saves the same driver as INACTIVE
+00:04 +48: test/unit/driver_actions_test.dart: DriverActions.deactivate refreshes drivers and vehicles (the vehicle is unassigned)
+00:04 +49: test/unit/driver_actions_test.dart: DriverActions.deactivate a rejected update changes nothing
+00:04 +50: test/unit/driver_actions_test.dart: DriverActions.hasHistory matches only the 409 history conflict
+00:04 +51: test/unit/driver_model_test.dart: Driver.fromJson parses a full DriverResponse
+00:04 +52: test/unit/driver_model_test.dart: Driver.fromJson currentVehicle null and INACTIVE status
+00:04 +53: test/unit/driver_model_test.dart: Driver.fromJson a missing licence expiry is rejected
+00:04 +54: test/unit/driver_model_test.dart: DriverInput sends the normalized phone and an ISO date
+00:05 +55: test/unit/driver_model_test.dart: DriverQuery defaults to fullName ascending
+00:05 +56: test/unit/driver_model_test.dart: DriverQuery adds search, status and available, caps size at 100
+00:05 +57: test/unit/driver_model_test.dart: DriverQuery copyWith can clear the status filter
+00:05 +58: test/unit/expiry_status_test.dart: ExpiryStatus.fromApi parses the three API values
+00:05 +59: test/unit/expiry_status_test.dart: ExpiryStatus.fromApi computes a missing value from the expiry date
+00:05 +60: test/unit/expiry_status_test.dart: ExpiryStatus.fromApi an unknown value without a date is a FormatException
+00:05 +61: test/unit/expiry_status_test.dart: ExpiryStatus.compute (BR-08) TC-08: expiring in 10 days is EXPIRING_SOON
+00:05 +62: test/unit/expiry_status_test.dart: ExpiryStatus.compute (BR-08) TC-09: expired yesterday is EXPIRED
+00:05 +63: test/unit/expiry_status_test.dart: ExpiryStatus.compute (BR-08) today and today + 30 are EXPIRING_SOON, day 31 is VALID
+00:05 +64: test/unit/expiry_status_test.dart: describe and tone badge text always says what it means
+00:05 +65: test/unit/expiry_status_test.dart: describe and tone green / amber / red tones
+00:05 +66: test/unit/login_throttling_test.dart: a 429 Problem Details keeps the detail and is not a 401
+00:05 +67: test/unit/login_throttling_test.dart: a 429 without a body still gets a helpful message
+00:05 +68: test/unit/login_throttling_test.dart: a 429 from login (or anywhere) never triggers the 401 sign-out
+00:05 +69: test/unit/login_throttling_test.dart: LoginController shows the 429 detail, not "invalid credentials"
+00:06 +70: test/unit/maintenance_and_assignment_test.dart: MaintenanceHistory.fromJson (FR-M02) parses page fields plus totalCost and recordCount
+00:06 +71: test/unit/maintenance_and_assignment_test.dart: MaintenanceHistory.fromJson (FR-M02) missing totals default to 0 / totalElements
+00:06 +72: test/unit/maintenance_and_assignment_test.dart: MaintenanceRecord parses a response, optional fields may be null
+00:06 +73: test/unit/maintenance_and_assignment_test.dart: MaintenanceInput trims text and sends blanks as null
+00:06 +74: test/unit/maintenance_and_assignment_test.dart: Assignment.fromJson (FR-DR02) parses a current assignment
+00:06 +75: test/unit/maintenance_and_assignment_test.dart: Assignment.fromJson (FR-DR02) a closed assignment; `current` falls back to unassignedAt
+00:06 +76: test/unit/model_rules_test.dart: Vehicle rules only an ACTIVE vehicle can receive a driver (BR-05)
+00:06 +77: test/unit/model_rules_test.dart: Vehicle rules going INACTIVE from another status ends the assignment
+00:06 +78: test/unit/model_rules_test.dart: Driver.losesVehicleOn an ACTIVE driver with a vehicle loses it when set INACTIVE
+00:06 +79: test/unit/model_rules_test.dart: Driver.losesVehicleOn nothing is lost without a vehicle or when already INACTIVE
+00:06 +80: test/unit/model_rules_test.dart: API enum parsing parseApiEnum matches exactly and names unknown values
+00:06 +81: test/unit/model_rules_test.dart: API enum parsing tryParseApiEnum is null for unknown values; ignoreCase for URLs
+00:06 +82: test/unit/model_rules_test.dart: API enum parsing Vehicle.fromJson still rejects an unknown status
+00:07 +83: test/unit/optimistic_locking_test.dart: version in responses (7.2.1) Vehicle, Driver and MaintenanceRecord parse version
+00:07 +84: test/unit/optimistic_locking_test.dart: version in responses (7.2.1) a missing version reads as 0 (new record)
+00:07 +85: test/unit/optimistic_locking_test.dart: version in PUT bodies (7.2.2) update bodies carry the version, create bodies do not
+00:07 +86: test/unit/optimistic_locking_test.dart: version in PUT bodies (7.2.2) the API repositories send version in PUT and not in POST
+00:07 +87: test/unit/optimistic_locking_test.dart: version in PUT bodies (7.2.2) the API repositories send version in PUT and not in POST
+00:07 +88: test/unit/optimistic_locking_test.dart: version in PUT bodies (7.2.2) the API repositories send version in PUT and not in POST
+00:07 +89: test/unit/optimistic_locking_test.dart: version in PUT bodies (7.2.2) the API repositories send version in PUT and not in POST
+00:07 +90: test/unit/optimistic_locking_test.dart: 409 stale-version (7.2.3) ApiException.isStaleVersion matches only that 409
+00:07 +91: test/unit/optimistic_locking_test.dart: 409 stale-version (7.2.3) FormSubmitState.failed keeps a stale version apart
+00:07 +92: test/unit/optimistic_locking_test.dart: controllers send the loaded version VehicleFormController updates with existing.version
+00:07 +93: test/unit/optimistic_locking_test.dart: controllers send the loaded version a stale vehicle save sets isStale, not a field error
+00:07 +94: test/unit/optimistic_locking_test.dart: controllers send the loaded version DriverFormController updates with existing.version
+00:07 +95: test/unit/optimistic_locking_test.dart: controllers send the loaded version DriverActions.deactivate sends the version; stale refreshes the drivers and rethrows
+00:07 +96: test/unit/optimistic_locking_test.dart: controllers send the loaded version MaintenanceFormController updates with existing.version and reload returns the fresh record
+00:08 +97: test/unit/user_management_test.dart: UserAccount (7.3.1) parses the contract example
+00:08 +98: test/unit/user_management_test.dart: UserAccount (7.3.1) start-up accounts have createdBy "system"; a missing one is null
+00:08 +99: test/unit/user_management_test.dart: request bodies (7.3.3) create: e-mail trimmed and lower-cased, password as typed, no version
+00:08 +100: test/unit/user_management_test.dart: request bodies (7.3.3) update: every field plus version, never the e-mail
+00:08 +101: test/unit/user_management_test.dart: UserQuery (7.3.2) defaults to email,asc and sends only set filters
+00:08 +102: test/unit/user_management_test.dart: UserQuery (7.3.2) a filter change goes back to the first page
+00:08 +103: test/unit/user_management_test.dart: UserValidators (password policy 8 chars … 72 bytes) minimum length 8
+00:08 +104: test/unit/user_management_test.dart: UserValidators (password policy 8 chars … 72 bytes) maximum 72 bytes in UTF-8, not 72 characters
+00:08 +105: test/unit/validators_test.dart: VehicleValidators.vehicleNumber (BR-03) requires a value
+00:08 +106: test/unit/validators_test.dart: VehicleValidators.vehicleNumber (BR-03) requires a value
+00:08 +107: test/unit/validators_test.dart: VehicleValidators.vehicleNumber (BR-03) requires a value
+00:08 +108: test/unit/user_management_test.dart: ApiUserRepository and own password change (endpoints of 7.4) paths, methods and bodies
+00:08 +109: test/unit/user_management_test.dart: ApiUserRepository and own password change (endpoints of 7.4) paths, methods and bodies
+00:08 +110: test/unit/user_management_test.dart: ApiUserRepository and own password change (endpoints of 7.4) paths, methods and bodies
+00:08 +111: test/unit/user_management_test.dart: ApiUserRepository and own password change (endpoints of 7.4) paths, methods and bodies
+00:08 +112: test/unit/user_management_test.dart: ApiUserRepository and own password change (endpoints of 7.4) paths, methods and bodies
+00:08 +113: test/unit/user_management_test.dart: ApiUserRepository and own password change (endpoints of 7.4) paths, methods and bodies
+00:08 +114: test/unit/user_management_test.dart: ApiUserRepository and own password change (endpoints of 7.4) paths, methods and bodies
+00:08 +115: test/unit/user_management_test.dart: ApiUserRepository and own password change (endpoints of 7.4) paths, methods and bodies
+00:08 +116: test/unit/user_management_test.dart: ApiUserRepository and own password change (endpoints of 7.4) paths, methods and bodies
+00:08 +117: test/unit/user_management_test.dart: ApiUserRepository and own password change (endpoints of 7.4) paths, methods and bodies
+00:08 +118: test/unit/user_management_test.dart: ApiUserRepository and own password change (endpoints of 7.4) paths, methods and bodies
+00:08 +119: test/unit/user_management_test.dart: ApiUserRepository and own password change (endpoints of 7.4) a wrong current password (400) does not sign the user out
+00:08 +120: test/unit/user_management_test.dart: UserFormController update sends the loaded version and refreshes the list
+00:08 +121: test/unit/validators_v2_test.dart: DriverValidators.phone (contract 6.3) normalizes spaces, hyphens, parentheses and +880
+00:08 +122: test/unit/user_management_test.dart: UserFormController 409 duplicate-email lands under the e-mail field
+00:08 +123: test/unit/user_management_test.dart: UserFormController 409 duplicate-email lands under the e-mail field
+00:08 +124: test/unit/user_management_test.dart: UserFormController 409 duplicate-email lands under the e-mail field
+00:08 +125: test/unit/validators_v2_test.dart: DriverValidators.phone (contract 6.3) name and licence are required with max lengths
+00:08 +126: test/unit/user_management_test.dart: UserFormController 409 last-admin and self-modification are general messages
+00:08 +127: test/unit/validators_v2_test.dart: MaintenanceValidators (BR-09) cost: >= 0 with at most 2 decimals
+00:08 +128: test/unit/validators_v2_test.dart: MaintenanceValidators (BR-09) cost: >= 0 with at most 2 decimals
+00:08 +129: test/unit/user_management_test.dart: UserFormController a password reset refreshes the list (it bumps the version)
+00:08 +130: test/unit/user_management_test.dart: UserFormController a password reset refreshes the list (it bumps the version)
+00:08 +131: test/unit/validators_v2_test.dart: MaintenanceValidators (BR-09) odometer is an optional whole number >= 0
+00:08 +132: test/unit/user_management_test.dart: authRedirect: /users is ADMIN only (7.7) STAFF is sent to the dashboard
+00:08 +133: test/unit/validators_v2_test.dart: Formatters (v2.0) money is BDT with thousands separators and 2 decimals
+00:08 +134: test/unit/validators_v2_test.dart: Formatters (v2.0) money is BDT with thousands separators and 2 decimals
+00:08 +135: test/unit/validators_v2_test.dart: Formatters (v2.0) money is BDT with thousands separators and 2 decimals
+00:08 +136: test/unit/user_management_test.dart: AuthController.changePassword (7.3.4) logs in again with the new password and keeps the user signed in
+00:08 +137: test/unit/user_management_test.dart: AuthController.changePassword (7.3.4) logs in again with the new password and keeps the user signed in
+00:08 +138: test/unit/validators_v2_test.dart: FormErrors.fromApi 409 duplicate phone without errors[] goes under phone
+00:08 +139: test/unit/user_management_test.dart: AuthController.changePassword (7.3.4) a failed re-login signs out with an explanation
+00:08 +140: test/unit/validators_v2_test.dart: FormErrors.fromApi errors[] entries go under their fields, unknown ones to message
+00:08 +141: test/unit/user_management_test.dart: AuthController.changePassword (7.3.4) a 401 from another request during the re-login is ignored
+00:09 +142: test/unit/user_management_test.dart: AuthController.changePassword (7.3.4) a rejected change keeps the session and logs in nobody
+00:09 +143: test/unit/vehicle_model_test.dart: Vehicle.fromJson (FR-V01) parses a full VehicleResponse
+00:09 +144: test/unit/vehicle_model_test.dart: Vehicle.fromJson (FR-V01) accepts null optional fields
+00:09 +145: test/unit/vehicle_model_test.dart: Vehicle.fromJson (FR-V01) rejects a body without id or vehicle number
+00:09 +146: test/unit/vehicle_model_test.dart: Vehicle.fromJson (FR-V01) rejects unknown enum values
+00:09 +147: test/unit/vehicle_model_test.dart: Vehicle.fromJson (FR-V01) toJson round-trips
+00:09 +148: test/unit/vehicle_model_test.dart: VehicleInput.toJson trims text and sends blank optional fields as null
+00:09 +149: test/unit/vehicle_query_test.dart: VehicleQuery.toQueryParameters defaults to page 0, size 20, newest first
+00:09 +150: test/unit/vehicle_query_test.dart: VehicleQuery.toQueryParameters adds a trimmed search and caps the size at 100
+00:09 +151: test/unit/vehicle_query_test.dart: VehicleQueryController a new search goes back to the first page
+00:09 +152: test/unit/vehicle_v2_test.dart: VehicleResponse with currentDriver (contract 6.2)
+00:09 +153: test/unit/vehicle_v2_test.dart: VehicleResponse with currentDriver (contract 6.2)
+00:09 +154: test/unit/vehicle_v2_test.dart: VehicleResponse with currentDriver (contract 6.2)
+00:09 +155: test/unit/vehicle_v2_test.dart: currentDriver null or missing means no driver
+00:09 +156: test/unit/vehicle_v2_test.dart: status and type filters become query parameters (FR-V09)
+00:10 +157: test/unit/vehicle_v2_test.dart: URL values parse case-insensitively, unknown ones are null
+00:10 +158: test/unit/vehicle_v2_test.dart: VehicleQueryController filters changing a filter resets the page to 0
+00:10 +159: test/unit/vehicle_v2_test.dart: VehicleQueryController filters showOnly replaces filters and clears search, keeps sort
+00:10 +160: test/widget/app_shell_v21_test.dart: ADMIN sees "Users" in the navigation rail
+00:13 +161: test/widget/assign_driver_dialog_test.dart: lists only available drivers (available=true, ACTIVE)
+00:13 +162: test/widget/assign_driver_dialog_test.dart: lists only available drivers (available=true, ACTIVE)
+00:14 +163: test/widget/assign_driver_dialog_test.dart: lists only available drivers (available=true, ACTIVE)
+00:14 +164: test/widget/assign_driver_dialog_test.dart: lists only available drivers (available=true, ACTIVE)
+00:14 +165: test/widget/assign_driver_dialog_test.dart: lists only available drivers (available=true, ACTIVE)
+00:14 +166: test/widget/assign_driver_dialog_test.dart: lists only available drivers (available=true, ACTIVE)
+00:14 +167: test/widget/assign_driver_dialog_test.dart: lists only available drivers (available=true, ACTIVE)
+00:16 +168: test/widget/dashboard_screen_test.dart: renders the numbers from GET /dashboard/summary (FR-DB01)
+00:17 +169: test/widget/driver_screens_test.dart: DriversListScreen (FR-DR01) rows with licence badge and current vehicle
+00:17 +170: test/widget/driver_screens_test.dart: DriversListScreen (FR-DR01) rows with licence badge and current vehicle
+00:17 +171: test/widget/driver_screens_test.dart: DriversListScreen (FR-DR01) rows with licence badge and current vehicle
+00:18 +172: test/widget/dashboard_screen_test.dart: tapping a status card opens the filtered vehicle list
+00:18 +173: test/widget/assign_driver_dialog_test.dart: assigns the chosen driver
+00:18 +174: test/widget/app_shell_v21_test.dart: STAFF changes the own password and stays logged in
+00:18 +175: test/widget/app_shell_v21_test.dart: STAFF changes the own password and stays logged in
+00:19 +176: test/widget/app_shell_v21_test.dart: STAFF changes the own password and stays logged in
+00:20 +177: test/widget/app_shell_v21_test.dart: STAFF changes the own password and stays logged in
+00:20 +178: test/widget/app_shell_v21_test.dart: STAFF changes the own password and stays logged in
+00:21 +179: test/widget/app_shell_v21_test.dart: STAFF changes the own password and stays logged in
+00:21 +180: test/widget/login_screen_test.dart: validates email and password before calling the API
+00:22 +181: test/widget/login_screen_test.dart: validates email and password before calling the API
+00:22 +182: test/widget/login_screen_test.dart: validates email and password before calling the API
+00:22 +183: test/widget/driver_screens_test.dart: DriversListScreen (FR-DR01) debounced search, status filter and sort go to the server
+00:23 +184: test/widget/driver_screens_test.dart: DriversListScreen (FR-DR01) debounced search, status filter and sort go to the server
+00:23 +185: test/widget/driver_screens_test.dart: DriversListScreen (FR-DR01) debounced search, status filter and sort go to the server
+
+Warning: A call to tap() with finder "Found 1 widget with text "Active" (ignoring all but last): [
+  Text("Active", dependencies: [DefaultSelectionStyle, DefaultTextStyle, MediaQuery]),
+]" derived an Offset (Offset(930.6, 108.0)) that would not hit test on the specified widget.
+Maybe the widget is actually off-screen, or another widget is obscuring it, or the widget cannot receive pointer events.
+The finder corresponds to this RenderBox: RenderParagraph#2eacf relayoutBoundary=up40
+The hit test result at that offset is: HitTestResult(RenderPointerListener#3847f@Offset(132.0, 28.0), RenderSemanticsAnnotations#61aba@Offset(132.0, 28.0), RenderMouseRegion#8e90f@Offset(132.0, 28.0), RenderSemanticsAnnotations#21303@Offset(132.0, 28.0), RenderSemanticsAnnotations#7ec2c@Offset(132.0, 28.0), RenderMergeSemantics#58410@Offset(132.0, 28.0), RenderAnimatedOpacity#84ec0@Offset(132.0, 28.0), _RenderMenuItem#4f709@Offset(132.0, 28.0), RenderListBody#bf29c@Offset(132.0, 84.0), RenderPadding#28e5d@Offset(132.0, 92.0), _RenderSingleChildViewport#5d585@Offset(132.0, 92.0), RenderIgnorePointer#e6ba0@Offset(132.0, 92.0), RenderSemanticsAnnotations#8e5dd@Offset(132.0, 92.0), RenderPointerListener#93b1e@Offset(132.0, 92.0), RenderSemanticsGestureHandler#551f7@Offset(132.0, 92.0), RenderPointerListener#ff7c0@Offset(132.0, 92.0), _RenderScrollSemantics#1e4fa@Offset(132.0, 92.0), RenderClipRect#cfc2f@Offset(132.0, 92.0), RenderSemanticsAnnotations#42a12@Offset(132.0, 92.0), RenderIntrinsicWidth#276d1@Offset(132.0, 92.0), RenderConstrainedBox#f9ecf@Offset(132.0, 92.0), RenderPositionedBox#a22cb@Offset(132.0, 92.0), _RenderInkFeatures#29807@Offset(132.0, 92.0), RenderCustomPaint#d1956@Offset(132.0, 92.0), RenderPhysicalShape#e4724@Offset(132.0, 92.0), RenderAnimatedOpacity#70588@Offset(132.0, 92.0), RenderCustomSingleChildLayoutBox#964d9@Offset(930.6, 108.0), _RenderLayoutBuilder#5e311@Offset(930.6, 108.0), RenderRepaintBoundary#7926a@Offset(930.6, 108.0), RenderIgnorePointer#b8ec0@Offset(930.6, 108.0), RenderRepaintBoundary#ff4bd@Offset(930.6, 108.0), RenderSemanticsAnnotations#dc391@Offset(930.6, 108.0), RenderOffstage#d8fb5@Offset(930.6, 108.0), RenderSemanticsAnnotations#49b49@Offset(930.6, 108.0), _RenderTheater#e4875@Offset(930.6, 108.0), RenderAbsorbPointer#b72b3@Offset(930.6, 108.0), RenderPointerListener#5e3d9@Offset(930.6, 108.0), RenderCustomPaint#070f7@Offset(930.6, 108.0), RenderSemanticsAnnotations#f1e4f@Offset(930.6, 108.0), RenderSemanticsAnnotations#859a1@Offset(930.6, 108.0), RenderSemanticsAnnotations#0863b@Offset(930.6, 108.0), RenderTapRegionSurface#f84a2@Offset(930.6, 108.0), RenderSemanticsAnnotations#70b03@Offset(930.6, 108.0), RenderSemanticsAnnotations#710e4@Offset(930.6, 108.0), HitTestEntry<HitTestTarget>#78773(_ReusableRenderView#854fb), HitTestEntry<HitTestTarget>#7c87a(<AutomatedTestWidgetsFlutterBinding>))
+#0      WidgetController._getElementPoint (package:flutter_test/src/controller.dart:2165:25)
+#1      WidgetController.getCenter (package:flutter_test/src/controller.dart:1947:12)
+#2      WidgetController.tap (package:flutter_test/src/controller.dart:1080:7)
+#3      main.<anonymous closure>.<anonymous closure> (test/widget/driver_screens_test.dart:93:20)
+<asynchronous suspension>
+#4      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#5      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
+<asynchronous suspension>
+#6      StackZoneSpecification._registerCallback.<anonymous closure> (package:stack_trace/src/stack_zone_specification.dart:114:42)
+<asynchronous suspension>
+To silence this warning, pass "warnIfMissed: false" to "tap()".
+To make this warning fatal, set WidgetController.hitTestWarningShouldBeFatal to true.
+
+00:24 +186: test/widget/documents_tab_test.dart: a 413 from the server is shown under the file
+00:24 +187: test/widget/documents_tab_test.dart: a 413 from the server is shown under the file
+00:25 +188: test/widget/documents_tab_test.dart: a 413 from the server is shown under the file
+00:25 +189: test/widget/documents_tab_test.dart: a 413 from the server is shown under the file
+00:25 +190: test/widget/documents_tab_test.dart: a 413 from the server is shown under the file
+00:25 +191: test/widget/documents_tab_test.dart: a 413 from the server is shown under the file
+00:26 +192: test/widget/documents_tab_test.dart: a 413 from the server is shown under the file
+00:26 +193: test/widget/documents_tab_test.dart: a 413 from the server is shown under the file
+00:26 +194: test/widget/documents_tab_test.dart: a 413 from the server is shown under the file
+00:27 +195: test/widget/documents_tab_test.dart: a 413 from the server is shown under the file
+00:27 +196: test/widget/app_shell_v21_test.dart: client-side checks: policy, repeat, different from current
+00:27 +197: test/widget/app_shell_v21_test.dart: client-side checks: policy, repeat, different from current
+00:27 +198: test/widget/app_shell_v21_test.dart: client-side checks: policy, repeat, different from current
+00:28 +199: test/widget/app_shell_v21_test.dart: client-side checks: policy, repeat, different from current
+00:28 +200: test/widget/app_shell_v21_test.dart: client-side checks: policy, repeat, different from current
+00:28 +201: test/widget/maintenance_tab_test.dart: ADMIN delete confirms and refreshes the total
+00:28 +202: test/widget/maintenance_tab_test.dart: ADMIN delete confirms and refreshes the total
+00:29 +203: test/widget/maintenance_tab_test.dart: ADMIN delete confirms and refreshes the total
+00:29 +204: test/widget/maintenance_tab_test.dart: ADMIN delete confirms and refreshes the total
+00:29 +205: test/widget/maintenance_tab_test.dart: add dialog validates cost and required fields
+00:31 +206: test/widget/responsive_lists_test.dart: maintenance history cards on a phone
+00:31 +207: test/widget/responsive_lists_test.dart: maintenance history cards on a phone
+00:32 +208: test/widget/responsive_v2_test.dart: dashboard has no overflow at phone 360
+00:32 +209: test/widget/responsive_v2_test.dart: dashboard has no overflow at phone 360
+00:33 +210: test/widget/responsive_v2_test.dart: dashboard has no overflow at phone 360
+00:33 +211: test/widget/responsive_v2_test.dart: dashboard has no overflow at phone 360
+00:33 +212: test/widget/sort_menu_test.dart: SortMenu shows arrow icons, not arrow characters
+00:34 +213: test/widget/sort_menu_test.dart: SortMenu shows arrow icons, not arrow characters
+00:34 +214: test/widget/sort_menu_test.dart: SortMenu shows arrow icons, not arrow characters
+00:34 +215: test/widget/sort_menu_test.dart: SortMenu shows arrow icons, not arrow characters
+00:34 +216: test/widget/sort_menu_test.dart: SortMenu shows arrow icons, not arrow characters
+00:35 +217: test/widget/sort_menu_test.dart: SortMenu shows arrow icons, not arrow characters
+00:35 +218: test/widget/sort_menu_test.dart: SortMenu shows arrow icons, not arrow characters
+
+Warning: A call to tap() with finder "Found 1 widget with text "Year" (ignoring all but first): [
+  Text("Year", overflow: ellipsis, dependencies: [DefaultSelectionStyle, DefaultTextStyle, MediaQuery]),
+]" derived an Offset (Offset(372.7, 388.0)) that would not hit test on the specified widget.
+Maybe the widget is actually off-screen, or another widget is obscuring it, or the widget cannot receive pointer events.
+The finder corresponds to this RenderBox: RenderParagraph#9d541 relayoutBoundary=up41
+The hit test result at that offset is: HitTestResult(RenderPointerListener#72aae@Offset(80.2, 28.0), RenderSemanticsAnnotations#03be1@Offset(80.2, 28.0), RenderMouseRegion#e90f8@Offset(80.2, 28.0), RenderSemanticsAnnotations#fd072@Offset(80.2, 28.0), RenderSemanticsAnnotations#ea12e@Offset(80.2, 28.0), RenderMergeSemantics#9f626@Offset(80.2, 28.0), RenderAnimatedOpacity#ba06d@Offset(80.2, 28.0), _RenderMenuItem#35c3d@Offset(80.2, 28.0), RenderListBody#cf5ad@Offset(80.2, 140.0), RenderPadding#25b59@Offset(80.2, 148.0), _RenderSingleChildViewport#7adf7@Offset(80.2, 148.0), RenderIgnorePointer#c3a2e@Offset(80.2, 148.0), RenderSemanticsAnnotations#87b6d@Offset(80.2, 148.0), RenderPointerListener#621b7@Offset(80.2, 148.0), RenderSemanticsGestureHandler#6494d@Offset(80.2, 148.0), RenderPointerListener#5d44d@Offset(80.2, 148.0), _RenderScrollSemantics#5e981@Offset(80.2, 148.0), RenderClipRect#4e465@Offset(80.2, 148.0), RenderSemanticsAnnotations#b978e@Offset(80.2, 148.0), RenderIntrinsicWidth#5db63@Offset(80.2, 148.0), RenderConstrainedBox#9519a@Offset(80.2, 148.0), RenderPositionedBox#acf6c@Offset(80.2, 148.0), _RenderInkFeatures#acdc8@Offset(80.2, 148.0), RenderCustomPaint#95a82@Offset(80.2, 148.0), RenderPhysicalShape#f5700@Offset(80.2, 148.0), RenderAnimatedOpacity#43b17@Offset(80.2, 148.0), RenderCustomSingleChildLayoutBox#37d51@Offset(372.7, 388.0), _RenderLayoutBuilder#a25d1@Offset(372.7, 388.0), RenderRepaintBoundary#2cff3@Offset(372.7, 388.0), RenderIgnorePointer#76117@Offset(372.7, 388.0), RenderRepaintBoundary#958e1@Offset(372.7, 388.0), RenderSemanticsAnnotations#016ed@Offset(372.7, 388.0), RenderOffstage#5b4cd@Offset(372.7, 388.0), RenderSemanticsAnnotations#74b3f@Offset(372.7, 388.0), _RenderTheater#56edb@Offset(372.7, 388.0), RenderAbsorbPointer#ba358@Offset(372.7, 388.0), RenderPointerListener#a388a@Offset(372.7, 388.0), RenderSemanticsAnnotations#ea735@Offset(372.7, 388.0), RenderCustomPaint#5c659@Offset(372.7, 388.0), RenderSemanticsAnnotations#29fe7@Offset(372.7, 388.0), RenderSemanticsAnnotations#14fbe@Offset(372.7, 388.0), RenderSemanticsAnnotations#72314@Offset(372.7, 388.0), RenderTapRegionSurface#743f3@Offset(372.7, 388.0), RenderSemanticsAnnotations#6a081@Offset(372.7, 388.0), RenderSemanticsAnnotations#f5f34@Offset(372.7, 388.0), HitTestEntry<HitTestTarget>#705ce(_ReusableRenderView#b3edc), HitTestEntry<HitTestTarget>#e8d3e(<AutomatedTestWidgetsFlutterBinding>))
+#0      WidgetController._getElementPoint (package:flutter_test/src/controller.dart:2165:25)
+#1      WidgetController.getCenter (package:flutter_test/src/controller.dart:1947:12)
+#2      WidgetController.tap (package:flutter_test/src/controller.dart:1080:7)
+#3      main.<anonymous closure> (test/widget/sort_menu_test.dart:48:18)
+<asynchronous suspension>
+#4      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#5      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
+<asynchronous suspension>
+#6      StackZoneSpecification._registerCallback.<anonymous closure> (package:stack_trace/src/stack_zone_specification.dart:114:42)
+<asynchronous suspension>
+To silence this warning, pass "warnIfMissed: false" to "tap()".
+To make this warning fatal, set WidgetController.hitTestWarningShouldBeFatal to true.
+
+00:35 +219: test/widget/stale_version_test.dart: vehicle form: Cancel keeps edits, Reload refills and the next save sends the new version
+00:35 +220: test/widget/stale_version_test.dart: vehicle form: Cancel keeps edits, Reload refills and the next save sends the new version
+00:35 +221: test/widget/stale_version_test.dart: vehicle form: Cancel keeps edits, Reload refills and the next save sends the new version
+00:35 +222: test/widget/stale_version_test.dart: vehicle form: Cancel keeps edits, Reload refills and the next save sends the new version
+00:35 +223: test/widget/stale_version_test.dart: vehicle form: Cancel keeps edits, Reload refills and the next save sends the new version
+00:35 +224: test/widget/stale_version_test.dart: vehicle form: Cancel keeps edits, Reload refills and the next save sends the new version
+00:35 +225: test/widget/stale_version_test.dart: vehicle form: Cancel keeps edits, Reload refills and the next save sends the new version
+00:36 +226: test/widget/stale_version_test.dart: vehicle form: Cancel keeps edits, Reload refills and the next save sends the new version
+00:36 +227: test/widget/stale_version_test.dart: vehicle form: Cancel keeps edits, Reload refills and the next save sends the new version
+00:36 +228: test/widget/stale_version_test.dart: vehicle form: Cancel keeps edits, Reload refills and the next save sends the new version
+00:36 +229: test/widget/stale_version_test.dart: vehicle form: Cancel keeps edits, Reload refills and the next save sends the new version
+00:37 +230: test/widget/stale_version_test.dart: vehicle form: Cancel keeps edits, Reload refills and the next save sends the new version
+00:38 +231: test/widget/stale_version_test.dart: vehicle form: Cancel keeps edits, Reload refills and the next save sends the new version
+00:38 +232: test/widget/stale_version_test.dart: vehicle form: Cancel keeps edits, Reload refills and the next save sends the new version
+00:39 +233: test/widget/users_screens_test.dart: users list full table with text badges; no reset on the own row
+00:39 +234: test/widget/users_screens_test.dart: users list full table with text badges; no reset on the own row
+00:39 +235: test/widget/users_screens_test.dart: users list full table with text badges; no reset on the own row
+00:40 +236: test/widget/users_screens_test.dart: users list full table with text badges; no reset on the own row
+00:40 +237: test/widget/users_screens_test.dart: users list full table with text badges; no reset on the own row
+00:41 +238: test/widget/responsive_v2_test.dart: dashboard has no overflow at tablet 800
+00:42 +239: test/widget/stale_version_test.dart: maintenance dialog reloads the record on stale-version
+00:42 +240: test/widget/stale_version_test.dart: maintenance dialog reloads the record on stale-version
+00:43 +241: test/widget/stale_version_test.dart: maintenance dialog reloads the record on stale-version
+00:43 +242: test/widget/stale_version_test.dart: maintenance dialog reloads the record on stale-version
+00:43 +243: test/widget/stale_version_test.dart: maintenance dialog reloads the record on stale-version
+00:44 +244: test/widget/users_screens_test.dart: users list search is debounced and sent to the server
+00:44 +245: test/widget/users_screens_test.dart: users list search is debounced and sent to the server
+00:44 +246: test/widget/users_screens_test.dart: users list search is debounced and sent to the server
+00:45 +247: test/widget/users_screens_test.dart: users list search is debounced and sent to the server
+00:45 +248: test/widget/vehicle_detail_screen_test.dart: ADMIN delete confirms, deletes and returns to the list
+00:46 +249: test/widget/vehicle_detail_screen_test.dart: ADMIN delete confirms, deletes and returns to the list
+00:46 +250: test/widget/vehicle_detail_v2_test.dart: has the four tabs and the current driver card
+00:46 +251: test/widget/vehicle_detail_v2_test.dart: has the four tabs and the current driver card
+00:46 +252: test/widget/vehicle_detail_v2_test.dart: has the four tabs and the current driver card
+00:47 +253: test/widget/vehicle_detail_v2_test.dart: has the four tabs and the current driver card
+00:47 +254: test/widget/users_screens_test.dart: users list role and status filters
+00:48 +255: test/widget/users_screens_test.dart: users list role and status filters
+00:48 +256: test/widget/users_screens_test.dart: users list role and status filters
+00:48 +257: test/widget/users_screens_test.dart: users list role and status filters
+00:49 +258: test/widget/users_screens_test.dart: users list role and status filters
+00:49 +259: test/widget/users_screens_test.dart: users list role and status filters
+
+Warning: A call to tap() with finder "Found 1 widget with text "Disabled" (ignoring all but last): [
+  Text("Disabled", dependencies: [DefaultSelectionStyle, DefaultTextStyle, MediaQuery]),
+]" derived an Offset (Offset(930.6, 164.0)) that would not hit test on the specified widget.
+Maybe the widget is actually off-screen, or another widget is obscuring it, or the widget cannot receive pointer events.
+The finder corresponds to this RenderBox: RenderParagraph#69d3c relayoutBoundary=up40
+The hit test result at that offset is: HitTestResult(RenderPointerListener#0597e@Offset(132.0, 28.0), RenderSemanticsAnnotations#e5eb6@Offset(132.0, 28.0), RenderMouseRegion#bc4a1@Offset(132.0, 28.0), RenderSemanticsAnnotations#3029d@Offset(132.0, 28.0), RenderSemanticsAnnotations#84cba@Offset(132.0, 28.0), RenderMergeSemantics#2ae32@Offset(132.0, 28.0), RenderAnimatedOpacity#3bf4e@Offset(132.0, 28.0), _RenderMenuItem#6f46b@Offset(132.0, 28.0), RenderListBody#ed257@Offset(132.0, 140.0), RenderPadding#b0d83@Offset(132.0, 148.0), _RenderSingleChildViewport#03173@Offset(132.0, 148.0), RenderIgnorePointer#f7363@Offset(132.0, 148.0), RenderSemanticsAnnotations#63b98@Offset(132.0, 148.0), RenderPointerListener#2b23d@Offset(132.0, 148.0), RenderSemanticsGestureHandler#b164f@Offset(132.0, 148.0), RenderPointerListener#f1951@Offset(132.0, 148.0), _RenderScrollSemantics#48155@Offset(132.0, 148.0), RenderClipRect#67d85@Offset(132.0, 148.0), RenderSemanticsAnnotations#ebd55@Offset(132.0, 148.0), RenderIntrinsicWidth#1513f@Offset(132.0, 148.0), RenderConstrainedBox#99e5f@Offset(132.0, 148.0), RenderPositionedBox#e704e@Offset(132.0, 148.0), _RenderInkFeatures#cb3a3@Offset(132.0, 148.0), RenderCustomPaint#24c97@Offset(132.0, 148.0), RenderPhysicalShape#073f7@Offset(132.0, 148.0), RenderAnimatedOpacity#205a3@Offset(132.0, 148.0), RenderCustomSingleChildLayoutBox#514dd@Offset(930.6, 164.0), _RenderLayoutBuilder#995e6@Offset(930.6, 164.0), RenderRepaintBoundary#8dc58@Offset(930.6, 164.0), RenderIgnorePointer#11358@Offset(930.6, 164.0), RenderRepaintBoundary#876fc@Offset(930.6, 164.0), RenderSemanticsAnnotations#0f81e@Offset(930.6, 164.0), RenderOffstage#796a6@Offset(930.6, 164.0), RenderSemanticsAnnotations#76a55@Offset(930.6, 164.0), _RenderTheater#90775@Offset(930.6, 164.0), RenderAbsorbPointer#7a478@Offset(930.6, 164.0), RenderPointerListener#1954e@Offset(930.6, 164.0), RenderCustomPaint#ed653@Offset(930.6, 164.0), RenderSemanticsAnnotations#f3c51@Offset(930.6, 164.0), RenderSemanticsAnnotations#0ab44@Offset(930.6, 164.0), RenderSemanticsAnnotations#b10a2@Offset(930.6, 164.0), RenderTapRegionSurface#bd5f4@Offset(930.6, 164.0), RenderSemanticsAnnotations#216b8@Offset(930.6, 164.0), RenderSemanticsAnnotations#0a2fe@Offset(930.6, 164.0), HitTestEntry<HitTestTarget>#7fada(_ReusableRenderView#80e1c), HitTestEntry<HitTestTarget>#ac286(<AutomatedTestWidgetsFlutterBinding>))
+#0      WidgetController._getElementPoint (package:flutter_test/src/controller.dart:2165:25)
+#1      WidgetController.getCenter (package:flutter_test/src/controller.dart:1947:12)
+#2      WidgetController.tap (package:flutter_test/src/controller.dart:1080:7)
+#3      main.<anonymous closure>.<anonymous closure> (test/widget/users_screens_test.dart:104:20)
+<asynchronous suspension>
+#4      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#5      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
+<asynchronous suspension>
+#6      StackZoneSpecification._registerCallback.<anonymous closure> (package:stack_trace/src/stack_zone_specification.dart:114:42)
+<asynchronous suspension>
+To silence this warning, pass "warnIfMissed: false" to "tap()".
+To make this warning fatal, set WidgetController.hitTestWarningShouldBeFatal to true.
+
+
+Warning: A call to tap() with finder "Found 1 widget with text "Admin" (ignoring all but last): [
+  Text("Admin", dependencies: [DefaultSelectionStyle, DefaultTextStyle, MediaQuery]),
+]" derived an Offset (Offset(658.1, 108.0)) that would not hit test on the specified widget.
+Maybe the widget is actually off-screen, or another widget is obscuring it, or the widget cannot receive pointer events.
+The finder corresponds to this RenderBox: RenderParagraph#6b51c relayoutBoundary=up40
+The hit test result at that offset is: HitTestResult(RenderPointerListener#be627@Offset(104.0, 28.0), RenderSemanticsAnnotations#14553@Offset(104.0, 28.0), RenderMouseRegion#a3dd3@Offset(104.0, 28.0), RenderSemanticsAnnotations#ca086@Offset(104.0, 28.0), RenderSemanticsAnnotations#ca2cd@Offset(104.0, 28.0), RenderMergeSemantics#cbde5@Offset(104.0, 28.0), RenderAnimatedOpacity#d343a@Offset(104.0, 28.0), _RenderMenuItem#3fedf@Offset(104.0, 28.0), RenderListBody#ce761@Offset(104.0, 84.0), RenderPadding#2f0ac@Offset(104.0, 92.0), _RenderSingleChildViewport#942ff@Offset(104.0, 92.0), RenderIgnorePointer#2861b@Offset(104.0, 92.0), RenderSemanticsAnnotations#c7537@Offset(104.0, 92.0), RenderPointerListener#996e0@Offset(104.0, 92.0), RenderSemanticsGestureHandler#38cf4@Offset(104.0, 92.0), RenderPointerListener#d71a8@Offset(104.0, 92.0), _RenderScrollSemantics#b2eba@Offset(104.0, 92.0), RenderClipRect#5f9b6@Offset(104.0, 92.0), RenderSemanticsAnnotations#a49fb@Offset(104.0, 92.0), RenderIntrinsicWidth#4520f@Offset(104.0, 92.0), RenderConstrainedBox#00080@Offset(104.0, 92.0), RenderPositionedBox#721a3@Offset(104.0, 92.0), _RenderInkFeatures#a8a7a@Offset(104.0, 92.0), RenderCustomPaint#21838@Offset(104.0, 92.0), RenderPhysicalShape#227fc@Offset(104.0, 92.0), RenderAnimatedOpacity#5a84b@Offset(104.0, 92.0), RenderCustomSingleChildLayoutBox#1d529@Offset(658.1, 108.0), _RenderLayoutBuilder#6127a@Offset(658.1, 108.0), RenderRepaintBoundary#b6b17@Offset(658.1, 108.0), RenderIgnorePointer#bddf0@Offset(658.1, 108.0), RenderRepaintBoundary#dcc41@Offset(658.1, 108.0), RenderSemanticsAnnotations#41d58@Offset(658.1, 108.0), RenderOffstage#01a3c@Offset(658.1, 108.0), RenderSemanticsAnnotations#c61f8@Offset(658.1, 108.0), _RenderTheater#90775@Offset(658.1, 108.0), RenderAbsorbPointer#7a478@Offset(658.1, 108.0), RenderPointerListener#1954e@Offset(658.1, 108.0), RenderCustomPaint#ed653@Offset(658.1, 108.0), RenderSemanticsAnnotations#f3c51@Offset(658.1, 108.0), RenderSemanticsAnnotations#0ab44@Offset(658.1, 108.0), RenderSemanticsAnnotations#b10a2@Offset(658.1, 108.0), RenderTapRegionSurface#bd5f4@Offset(658.1, 108.0), RenderSemanticsAnnotations#216b8@Offset(658.1, 108.0), RenderSemanticsAnnotations#0a2fe@Offset(658.1, 108.0), HitTestEntry<HitTestTarget>#bc7cd(_ReusableRenderView#80e1c), HitTestEntry<HitTestTarget>#27852(<AutomatedTestWidgetsFlutterBinding>))
+#0      WidgetController._getElementPoint (package:flutter_test/src/controller.dart:2165:25)
+#1      WidgetController.getCenter (package:flutter_test/src/controller.dart:1947:12)
+#2      WidgetController.tap (package:flutter_test/src/controller.dart:1080:7)
+#3      main.<anonymous closure>.<anonymous closure> (test/widget/users_screens_test.dart:112:20)
+<asynchronous suspension>
+#4      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#5      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
+<asynchronous suspension>
+#6      StackZoneSpecification._registerCallback.<anonymous closure> (package:stack_trace/src/stack_zone_specification.dart:114:42)
+<asynchronous suspension>
+To silence this warning, pass "warnIfMissed: false" to "tap()".
+To make this warning fatal, set WidgetController.hitTestWarningShouldBeFatal to true.
+
+00:49 +260: test/widget/vehicle_form_screen_test.dart: validates required fields on the client (BR-03)
+00:49 +261: test/widget/vehicle_form_screen_test.dart: validates required fields on the client (BR-03)
+00:50 +262: test/widget/vehicle_form_screen_test.dart: validates required fields on the client (BR-03)
+00:50 +263: test/widget/vehicle_form_screen_test.dart: validates required fields on the client (BR-03)
+00:51 +264: test/widget/vehicle_form_screen_test.dart: validates required fields on the client (BR-03)
+00:51 +265: test/widget/vehicle_form_screen_test.dart: validates required fields on the client (BR-03)
+00:52 +266: test/widget/vehicle_form_screen_test.dart: validates required fields on the client (BR-03)
+00:52 +267: test/widget/vehicle_list_filters_test.dart: status and type filters are sent to the server (FR-V09)
+00:52 +268: test/widget/vehicle_list_filters_test.dart: status and type filters are sent to the server (FR-V09)
+00:53 +269: test/widget/vehicle_list_filters_test.dart: status and type filters are sent to the server (FR-V09)
+00:53 +270: test/widget/vehicle_list_filters_test.dart: status and type filters are sent to the server (FR-V09)
+00:54 +271: test/widget/vehicle_list_filters_test.dart: status and type filters are sent to the server (FR-V09)
+00:54 +272: test/widget/vehicle_list_filters_test.dart: status and type filters are sent to the server (FR-V09)
+00:54 +273: test/widget/vehicle_list_filters_test.dart: status and type filters are sent to the server (FR-V09)
+00:55 +274: test/widget/vehicle_list_filters_test.dart: status and type filters are sent to the server (FR-V09)
+00:56 +275: test/widget/vehicle_list_filters_test.dart: status and type filters are sent to the server (FR-V09)
+00:56 +276: test/widget/vehicle_list_filters_test.dart: status and type filters are sent to the server (FR-V09)
+00:56 +277: test/widget/vehicle_list_filters_test.dart: status and type filters are sent to the server (FR-V09)
+00:56 +278: test/widget/vehicle_list_filters_test.dart: status and type filters are sent to the server (FR-V09)
+00:57 +279: test/widget/vehicle_list_filters_test.dart: status and type filters are sent to the server (FR-V09)
+00:57 +280: test/widget/vehicle_list_filters_test.dart: status and type filters are sent to the server (FR-V09)
+00:58 +281: test/widget/vehicle_list_filters_test.dart: status and type filters are sent to the server (FR-V09)
+00:58 +282: test/widget/vehicle_list_filters_test.dart: status and type filters are sent to the server (FR-V09)
+00:59 +283: test/widget/vehicle_list_filters_test.dart: status and type filters are sent to the server (FR-V09)
+01:00 +284: test/widget/vehicle_list_filters_test.dart: status and type filters are sent to the server (FR-V09)
+01:00 +285: test/widget/vehicle_list_filters_test.dart: status and type filters are sent to the server (FR-V09)
+01:00 +286: test/widget/vehicle_list_filters_test.dart: status and type filters are sent to the server (FR-V09)
+01:00 +287: test/widget/vehicle_list_filters_test.dart: status and type filters are sent to the server (FR-V09)
+01:00 +288: test/widget/vehicle_list_filters_test.dart: status and type filters are sent to the server (FR-V09)
+01:01 +289: test/widget/vehicle_list_filters_test.dart: status and type filters are sent to the server (FR-V09)
+01:02 +290: test/widget/vehicle_list_filters_test.dart: status and type filters are sent to the server (FR-V09)
+01:02 +291: test/widget/vehicle_list_filters_test.dart: status and type filters are sent to the server (FR-V09)
+
+Warning: A call to tap() with finder "Found 1 widget with text "Maintenance" (ignoring all but last): [
+  Text("Maintenance", dependencies: [DefaultSelectionStyle, DefaultTextStyle, MediaQuery]),
+]" derived an Offset (Offset(516.0, 260.0)) that would not hit test on the specified widget.
+Maybe the widget is actually off-screen, or another widget is obscuring it, or the widget cannot receive pointer events.
+The finder corresponds to this RenderBox: RenderParagraph#66d4e relayoutBoundary=up40
+The hit test result at that offset is: HitTestResult(RenderPointerListener#81d06@Offset(132.0, 28.0), RenderSemanticsAnnotations#e4438@Offset(132.0, 28.0), RenderMouseRegion#cbcc2@Offset(132.0, 28.0), RenderSemanticsAnnotations#3aadf@Offset(132.0, 28.0), RenderSemanticsAnnotations#cc904@Offset(132.0, 28.0), RenderMergeSemantics#583e1@Offset(132.0, 28.0), RenderAnimatedOpacity#9deab@Offset(132.0, 28.0), _RenderMenuItem#74abb@Offset(132.0, 28.0), RenderListBody#82768@Offset(132.0, 196.0), RenderPadding#a3852@Offset(132.0, 204.0), _RenderSingleChildViewport#518d2@Offset(132.0, 204.0), RenderIgnorePointer#b119b@Offset(132.0, 204.0), RenderSemanticsAnnotations#09010@Offset(132.0, 204.0), RenderPointerListener#d7602@Offset(132.0, 204.0), RenderSemanticsGestureHandler#1a0e7@Offset(132.0, 204.0), RenderPointerListener#1d592@Offset(132.0, 204.0), _RenderScrollSemantics#32cc2@Offset(132.0, 204.0), RenderClipRect#599ed@Offset(132.0, 204.0), RenderSemanticsAnnotations#1af3c@Offset(132.0, 204.0), RenderIntrinsicWidth#1cf6c@Offset(132.0, 204.0), RenderConstrainedBox#23277@Offset(132.0, 204.0), RenderPositionedBox#a64b7@Offset(132.0, 204.0), _RenderInkFeatures#54a9f@Offset(132.0, 204.0), RenderCustomPaint#8e0ad@Offset(132.0, 204.0), RenderPhysicalShape#90e7f@Offset(132.0, 204.0), RenderAnimatedOpacity#e5330@Offset(132.0, 204.0), RenderCustomSingleChildLayoutBox#69165@Offset(516.0, 260.0), _RenderLayoutBuilder#e3436@Offset(516.0, 260.0), RenderRepaintBoundary#7ef81@Offset(516.0, 260.0), RenderIgnorePointer#9731a@Offset(516.0, 260.0), RenderRepaintBoundary#dbb3d@Offset(516.0, 260.0), RenderSemanticsAnnotations#54d4c@Offset(516.0, 260.0), RenderOffstage#9d5a4@Offset(516.0, 260.0), RenderSemanticsAnnotations#83e21@Offset(516.0, 260.0), _RenderTheater#af9b4@Offset(516.0, 260.0), RenderAbsorbPointer#86821@Offset(516.0, 260.0), RenderPointerListener#2f9ae@Offset(516.0, 260.0), RenderCustomPaint#3a9b3@Offset(516.0, 260.0), RenderSemanticsAnnotations#87da2@Offset(516.0, 260.0), RenderSemanticsAnnotations#b1d29@Offset(516.0, 260.0), RenderSemanticsAnnotations#9516a@Offset(516.0, 260.0), RenderTapRegionSurface#908bb@Offset(516.0, 260.0), RenderSemanticsAnnotations#dcfa7@Offset(516.0, 260.0), RenderSemanticsAnnotations#94d37@Offset(516.0, 260.0), HitTestEntry<HitTestTarget>#e2993(_ReusableRenderView#e97eb), HitTestEntry<HitTestTarget>#082ac(<AutomatedTestWidgetsFlutterBinding>))
+#0      WidgetController._getElementPoint (package:flutter_test/src/controller.dart:2165:25)
+#1      WidgetController.getCenter (package:flutter_test/src/controller.dart:1947:12)
+#2      WidgetController.tap (package:flutter_test/src/controller.dart:1080:7)
+#3      main.choose (test/widget/vehicle_list_filters_test.dart:59:18)
+<asynchronous suspension>
+#4      main.<anonymous closure> (test/widget/vehicle_list_filters_test.dart:68:5)
+<asynchronous suspension>
+#5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#6      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
+<asynchronous suspension>
+#7      StackZoneSpecification._registerCallback.<anonymous closure> (package:stack_trace/src/stack_zone_specification.dart:114:42)
+<asynchronous suspension>
+To silence this warning, pass "warnIfMissed: false" to "tap()".
+To make this warning fatal, set WidgetController.hitTestWarningShouldBeFatal to true.
+
+
+Warning: A call to tap() with finder "Found 1 widget with text "Bus" (ignoring all but last): [
+  Text("Bus", dependencies: [DefaultSelectionStyle, DefaultTextStyle, MediaQuery]),
+]" derived an Offset (Offset(1069.0, 276.0)) that would not hit test on the specified widget.
+Maybe the widget is actually off-screen, or another widget is obscuring it, or the widget cannot receive pointer events.
+The finder corresponds to this RenderBox: RenderParagraph#d318f relayoutBoundary=up40
+The hit test result at that offset is: HitTestResult(RenderPointerListener#b5193@Offset(132.0, 28.0), RenderSemanticsAnnotations#ffb7d@Offset(132.0, 28.0), RenderMouseRegion#d0c0f@Offset(132.0, 28.0), RenderSemanticsAnnotations#68cea@Offset(132.0, 28.0), RenderSemanticsAnnotations#3b154@Offset(132.0, 28.0), RenderMergeSemantics#ff2dd@Offset(132.0, 28.0), RenderAnimatedOpacity#4ff5c@Offset(132.0, 28.0), _RenderMenuItem#0ff49@Offset(132.0, 28.0), RenderListBody#7051c@Offset(132.0, 252.0), RenderPadding#ed5e4@Offset(132.0, 260.0), _RenderSingleChildViewport#7f1b0@Offset(132.0, 260.0), RenderIgnorePointer#c6311@Offset(132.0, 260.0), RenderSemanticsAnnotations#afb23@Offset(132.0, 260.0), RenderPointerListener#56c62@Offset(132.0, 260.0), RenderSemanticsGestureHandler#2ff54@Offset(132.0, 260.0), RenderPointerListener#94a1b@Offset(132.0, 260.0), _RenderScrollSemantics#89be2@Offset(132.0, 260.0), RenderClipRect#bc669@Offset(132.0, 260.0), RenderSemanticsAnnotations#14f94@Offset(132.0, 260.0), RenderIntrinsicWidth#74a62@Offset(132.0, 260.0), RenderConstrainedBox#b5e0b@Offset(132.0, 260.0), RenderPositionedBox#e5c54@Offset(132.0, 260.0), _RenderInkFeatures#ee3a8@Offset(132.0, 260.0), RenderCustomPaint#3e97e@Offset(132.0, 260.0), RenderPhysicalShape#e0260@Offset(132.0, 260.0), RenderAnimatedOpacity#f6289@Offset(132.0, 260.0), RenderCustomSingleChildLayoutBox#a05d1@Offset(1069.0, 276.0), _RenderLayoutBuilder#61079@Offset(1069.0, 276.0), RenderRepaintBoundary#382e0@Offset(1069.0, 276.0), RenderIgnorePointer#93c9f@Offset(1069.0, 276.0), RenderRepaintBoundary#a9480@Offset(1069.0, 276.0), RenderSemanticsAnnotations#5a3d4@Offset(1069.0, 276.0), RenderOffstage#46cf4@Offset(1069.0, 276.0), RenderSemanticsAnnotations#72ead@Offset(1069.0, 276.0), _RenderTheater#af9b4@Offset(1069.0, 276.0), RenderAbsorbPointer#86821@Offset(1069.0, 276.0), RenderPointerListener#2f9ae@Offset(1069.0, 276.0), RenderCustomPaint#3a9b3@Offset(1069.0, 276.0), RenderSemanticsAnnotations#87da2@Offset(1069.0, 276.0), RenderSemanticsAnnotations#b1d29@Offset(1069.0, 276.0), RenderSemanticsAnnotations#9516a@Offset(1069.0, 276.0), RenderTapRegionSurface#908bb@Offset(1069.0, 276.0), RenderSemanticsAnnotations#dcfa7@Offset(1069.0, 276.0), RenderSemanticsAnnotations#94d37@Offset(1069.0, 276.0), HitTestEntry<HitTestTarget>#76f1a(_ReusableRenderView#e97eb), HitTestEntry<HitTestTarget>#57f63(<AutomatedTestWidgetsFlutterBinding>))
+#0      WidgetController._getElementPoint (package:flutter_test/src/controller.dart:2165:25)
+#1      WidgetController.getCenter (package:flutter_test/src/controller.dart:1947:12)
+#2      WidgetController.tap (package:flutter_test/src/controller.dart:1080:7)
+#3      main.choose (test/widget/vehicle_list_filters_test.dart:59:18)
+<asynchronous suspension>
+#4      main.<anonymous closure> (test/widget/vehicle_list_filters_test.dart:75:5)
+<asynchronous suspension>
+#5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#6      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
+<asynchronous suspension>
+#7      StackZoneSpecification._registerCallback.<anonymous closure> (package:stack_trace/src/stack_zone_specification.dart:114:42)
+<asynchronous suspension>
+To silence this warning, pass "warnIfMissed: false" to "tap()".
+To make this warning fatal, set WidgetController.hitTestWarningShouldBeFatal to true.
+
+
+Warning: A call to tap() with finder "Found 1 widget with text "All" (ignoring all but last): [
+  Text("All", dependencies: [DefaultSelectionStyle, DefaultTextStyle, MediaQuery]),
+]" derived an Offset (Offset(880.1, 52.0)) that would not hit test on the specified widget.
+Maybe the widget is actually off-screen, or another widget is obscuring it, or the widget cannot receive pointer events.
+The finder corresponds to this RenderBox: RenderParagraph#33241 relayoutBoundary=up40
+The hit test result at that offset is: HitTestResult(RenderPointerListener#43a6a@Offset(132.0, 28.0), RenderSemanticsAnnotations#96471@Offset(132.0, 28.0), RenderMouseRegion#30bdd@Offset(132.0, 28.0), RenderSemanticsAnnotations#5415e@Offset(132.0, 28.0), RenderSemanticsAnnotations#b87b4@Offset(132.0, 28.0), RenderMergeSemantics#c8b9a@Offset(132.0, 28.0), RenderAnimatedOpacity#e6b32@Offset(132.0, 28.0), _RenderMenuItem#357af@Offset(132.0, 28.0), RenderListBody#b73f9@Offset(132.0, 28.0), RenderPadding#e6692@Offset(132.0, 36.0), _RenderSingleChildViewport#0638e@Offset(132.0, 36.0), RenderIgnorePointer#fcbe6@Offset(132.0, 36.0), RenderSemanticsAnnotations#85287@Offset(132.0, 36.0), RenderPointerListener#d798a@Offset(132.0, 36.0), RenderSemanticsGestureHandler#80f27@Offset(132.0, 36.0), RenderPointerListener#fa5a4@Offset(132.0, 36.0), _RenderScrollSemantics#295d4@Offset(132.0, 36.0), RenderClipRect#840d9@Offset(132.0, 36.0), RenderSemanticsAnnotations#a0078@Offset(132.0, 36.0), RenderIntrinsicWidth#b4f8e@Offset(132.0, 36.0), RenderConstrainedBox#885f5@Offset(132.0, 36.0), RenderPositionedBox#3083a@Offset(132.0, 36.0), _RenderInkFeatures#b07a5@Offset(132.0, 36.0), RenderCustomPaint#1ad17@Offset(132.0, 36.0), RenderPhysicalShape#a9c18@Offset(132.0, 36.0), RenderAnimatedOpacity#11387@Offset(132.0, 36.0), RenderCustomSingleChildLayoutBox#6c24a@Offset(880.1, 52.0), _RenderLayoutBuilder#58393@Offset(880.1, 52.0), RenderRepaintBoundary#d83ca@Offset(880.1, 52.0), RenderIgnorePointer#98ea9@Offset(880.1, 52.0), RenderRepaintBoundary#5de07@Offset(880.1, 52.0), RenderSemanticsAnnotations#ff380@Offset(880.1, 52.0), RenderOffstage#7a476@Offset(880.1, 52.0), RenderSemanticsAnnotations#46401@Offset(880.1, 52.0), _RenderTheater#af9b4@Offset(880.1, 52.0), RenderAbsorbPointer#86821@Offset(880.1, 52.0), RenderPointerListener#2f9ae@Offset(880.1, 52.0), RenderCustomPaint#3a9b3@Offset(880.1, 52.0), RenderSemanticsAnnotations#87da2@Offset(880.1, 52.0), RenderSemanticsAnnotations#b1d29@Offset(880.1, 52.0), RenderSemanticsAnnotations#9516a@Offset(880.1, 52.0), RenderTapRegionSurface#908bb@Offset(880.1, 52.0), RenderSemanticsAnnotations#dcfa7@Offset(880.1, 52.0), RenderSemanticsAnnotations#94d37@Offset(880.1, 52.0), HitTestEntry<HitTestTarget>#909b6(_ReusableRenderView#e97eb), HitTestEntry<HitTestTarget>#4ef21(<AutomatedTestWidgetsFlutterBinding>))
+#0      WidgetController._getElementPoint (package:flutter_test/src/controller.dart:2165:25)
+#1      WidgetController.getCenter (package:flutter_test/src/controller.dart:1947:12)
+#2      WidgetController.tap (package:flutter_test/src/controller.dart:1080:7)
+#3      main.choose (test/widget/vehicle_list_filters_test.dart:59:18)
+<asynchronous suspension>
+#4      main.<anonymous closure> (test/widget/vehicle_list_filters_test.dart:80:5)
+<asynchronous suspension>
+#5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#6      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
+<asynchronous suspension>
+#7      StackZoneSpecification._registerCallback.<anonymous closure> (package:stack_trace/src/stack_zone_specification.dart:114:42)
+<asynchronous suspension>
+To silence this warning, pass "warnIfMissed: false" to "tap()".
+To make this warning fatal, set WidgetController.hitTestWarningShouldBeFatal to true.
+
+01:02 +292: test/widget/vehicle_list_screen_test.dart: ADMIN delete asks for confirmation and refreshes the list
+01:02 +293: test/widget/vehicle_list_screen_test.dart: ADMIN delete asks for confirmation and refreshes the list
+01:03 +294: test/widget/vehicle_list_screen_test.dart: ADMIN delete asks for confirmation and refreshes the list
+01:03 +295: test/widget/vehicle_list_screen_test.dart: ADMIN delete asks for confirmation and refreshes the list
+01:03 +296: test/widget/vehicle_form_screen_test.dart: a network failure on save is reported, form stays filled
+01:04 +297: test/widget/vehicle_form_screen_test.dart: a network failure on save is reported, form stays filled
+01:04 +298: test/widget/vehicle_list_filters_test.dart: search is sent with the filters (FR-V08)
+01:04 +299: test/widget/vehicle_list_filters_test.dart: search is sent with the filters (FR-V08)
+01:05 +300: test/widget/vehicle_list_filters_test.dart: search is sent with the filters (FR-V08)
+01:05 +301: test/widget/vehicle_list_filters_test.dart: search is sent with the filters (FR-V08)
+01:07 +302: test/widget/vehicle_list_filters_test.dart: search is sent with the filters (FR-V08)
+01:09 +303: test/widget/vehicle_list_filters_test.dart: search is sent with the filters (FR-V08)
+01:14 +304: test/widget/vehicle_list_filters_test.dart: search is sent with the filters (FR-V08)
+
+Warning: A call to tap() with finder "Found 1 widget with text "Active" (ignoring all but last): [
+  Text("Active", dependencies: [DefaultSelectionStyle, DefaultTextStyle, MediaQuery]),
+]" derived an Offset (Offset(516.0, 148.0)) that would not hit test on the specified widget.
+Maybe the widget is actually off-screen, or another widget is obscuring it, or the widget cannot receive pointer events.
+The finder corresponds to this RenderBox: RenderParagraph#58e0c relayoutBoundary=up40
+The hit test result at that offset is: HitTestResult(RenderPointerListener#98291@Offset(132.0, 28.0), RenderSemanticsAnnotations#19e31@Offset(132.0, 28.0), RenderMouseRegion#dc3a6@Offset(132.0, 28.0), RenderSemanticsAnnotations#267a3@Offset(132.0, 28.0), RenderSemanticsAnnotations#238b5@Offset(132.0, 28.0), RenderMergeSemantics#65064@Offset(132.0, 28.0), RenderAnimatedOpacity#53a9b@Offset(132.0, 28.0), _RenderMenuItem#9e455@Offset(132.0, 28.0), RenderListBody#38505@Offset(132.0, 84.0), RenderPadding#c7362@Offset(132.0, 92.0), _RenderSingleChildViewport#c60a5@Offset(132.0, 92.0), RenderIgnorePointer#46f27@Offset(132.0, 92.0), RenderSemanticsAnnotations#e2f6c@Offset(132.0, 92.0), RenderPointerListener#0172c@Offset(132.0, 92.0), RenderSemanticsGestureHandler#65539@Offset(132.0, 92.0), RenderPointerListener#04415@Offset(132.0, 92.0), _RenderScrollSemantics#7c8d5@Offset(132.0, 92.0), RenderClipRect#8fdae@Offset(132.0, 92.0), RenderSemanticsAnnotations#54247@Offset(132.0, 92.0), RenderIntrinsicWidth#14e6f@Offset(132.0, 92.0), RenderConstrainedBox#9f69b@Offset(132.0, 92.0), RenderPositionedBox#5e084@Offset(132.0, 92.0), _RenderInkFeatures#37f4a@Offset(132.0, 92.0), RenderCustomPaint#46d7b@Offset(132.0, 92.0), RenderPhysicalShape#ca4a1@Offset(132.0, 92.0), RenderAnimatedOpacity#1e4f2@Offset(132.0, 92.0), RenderCustomSingleChildLayoutBox#f4dde@Offset(516.0, 148.0), _RenderLayoutBuilder#481fb@Offset(516.0, 148.0), RenderRepaintBoundary#225d1@Offset(516.0, 148.0), RenderIgnorePointer#4c338@Offset(516.0, 148.0), RenderRepaintBoundary#dd76e@Offset(516.0, 148.0), RenderSemanticsAnnotations#f71f0@Offset(516.0, 148.0), RenderOffstage#227db@Offset(516.0, 148.0), RenderSemanticsAnnotations#ac575@Offset(516.0, 148.0), _RenderTheater#b4bbe@Offset(516.0, 148.0), RenderAbsorbPointer#a3109@Offset(516.0, 148.0), RenderPointerListener#86135@Offset(516.0, 148.0), RenderCustomPaint#3b80f@Offset(516.0, 148.0), RenderSemanticsAnnotations#16440@Offset(516.0, 148.0), RenderSemanticsAnnotations#31f92@Offset(516.0, 148.0), RenderSemanticsAnnotations#b361e@Offset(516.0, 148.0), RenderTapRegionSurface#79f4e@Offset(516.0, 148.0), RenderSemanticsAnnotations#4e2d5@Offset(516.0, 148.0), RenderSemanticsAnnotations#c2fdc@Offset(516.0, 148.0), HitTestEntry<HitTestTarget>#331ca(_ReusableRenderView#e97eb), HitTestEntry<HitTestTarget>#4ba92(<AutomatedTestWidgetsFlutterBinding>))
+#0      WidgetController._getElementPoint (package:flutter_test/src/controller.dart:2165:25)
+#1      WidgetController.getCenter (package:flutter_test/src/controller.dart:1947:12)
+#2      WidgetController.tap (package:flutter_test/src/controller.dart:1080:7)
+#3      main.choose (test/widget/vehicle_list_filters_test.dart:59:18)
+<asynchronous suspension>
+#4      main.<anonymous closure> (test/widget/vehicle_list_filters_test.dart:89:5)
+<asynchronous suspension>
+#5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#6      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
+<asynchronous suspension>
+#7      StackZoneSpecification._registerCallback.<anonymous closure> (package:stack_trace/src/stack_zone_specification.dart:114:42)
+<asynchronous suspension>
+To silence this warning, pass "warnIfMissed: false" to "tap()".
+To make this warning fatal, set WidgetController.hitTestWarningShouldBeFatal to true.
+
+01:15 +305: test/widget/vehicle_list_screen_test.dart: Enter in the search field searches at once
+01:16 +306: test/widget/vehicle_list_filters_test.dart: changing a filter goes back to page 1
+01:20 +307: test/widget/vehicle_list_filters_test.dart: changing a filter goes back to page 1
+
+Warning: A call to tap() with finder "Found 1 widget with text "Car" (ignoring all but last): [
+  Text("Car", dependencies: [DefaultSelectionStyle, DefaultTextStyle, MediaQuery]),
+]" derived an Offset (Offset(733.1, 148.0)) that would not hit test on the specified widget.
+Maybe the widget is actually off-screen, or another widget is obscuring it, or the widget cannot receive pointer events.
+The finder corresponds to this RenderBox: RenderParagraph#31c22 relayoutBoundary=up40
+The hit test result at that offset is: HitTestResult(RenderPointerListener#fbc13@Offset(132.0, 28.0), RenderSemanticsAnnotations#c9baa@Offset(132.0, 28.0), RenderMouseRegion#c7a5c@Offset(132.0, 28.0), RenderSemanticsAnnotations#d1494@Offset(132.0, 28.0), RenderSemanticsAnnotations#d6799@Offset(132.0, 28.0), RenderMergeSemantics#80ca5@Offset(132.0, 28.0), RenderAnimatedOpacity#a270d@Offset(132.0, 28.0), _RenderMenuItem#48203@Offset(132.0, 28.0), RenderListBody#436cf@Offset(132.0, 84.0), RenderPadding#ae1f3@Offset(132.0, 92.0), _RenderSingleChildViewport#ec820@Offset(132.0, 92.0), RenderIgnorePointer#5ce9c@Offset(132.0, 92.0), RenderSemanticsAnnotations#6b8b3@Offset(132.0, 92.0), RenderPointerListener#60630@Offset(132.0, 92.0), RenderSemanticsGestureHandler#73964@Offset(132.0, 92.0), RenderPointerListener#e2788@Offset(132.0, 92.0), _RenderScrollSemantics#19b73@Offset(132.0, 92.0), RenderClipRect#b6a0a@Offset(132.0, 92.0), RenderSemanticsAnnotations#b442b@Offset(132.0, 92.0), RenderIntrinsicWidth#20fae@Offset(132.0, 92.0), RenderConstrainedBox#6d684@Offset(132.0, 92.0), RenderPositionedBox#2765f@Offset(132.0, 92.0), _RenderInkFeatures#a261f@Offset(132.0, 92.0), RenderCustomPaint#899a3@Offset(132.0, 92.0), RenderPhysicalShape#437db@Offset(132.0, 92.0), RenderAnimatedOpacity#27f96@Offset(132.0, 92.0), RenderCustomSingleChildLayoutBox#89e27@Offset(733.1, 148.0), _RenderLayoutBuilder#0a58e@Offset(733.1, 148.0), RenderRepaintBoundary#578eb@Offset(733.1, 148.0), RenderIgnorePointer#86c1d@Offset(733.1, 148.0), RenderRepaintBoundary#2f1df@Offset(733.1, 148.0), RenderSemanticsAnnotations#5517f@Offset(733.1, 148.0), RenderOffstage#0e48d@Offset(733.1, 148.0), RenderSemanticsAnnotations#286a5@Offset(733.1, 148.0), _RenderTheater#a7506@Offset(733.1, 148.0), RenderAbsorbPointer#7d41f@Offset(733.1, 148.0), RenderPointerListener#c331a@Offset(733.1, 148.0), RenderCustomPaint#bb4e8@Offset(733.1, 148.0), RenderSemanticsAnnotations#0e725@Offset(733.1, 148.0), RenderSemanticsAnnotations#dbe26@Offset(733.1, 148.0), RenderSemanticsAnnotations#6ba24@Offset(733.1, 148.0), RenderTapRegionSurface#6b11b@Offset(733.1, 148.0), RenderSemanticsAnnotations#e0ee2@Offset(733.1, 148.0), RenderSemanticsAnnotations#89e7b@Offset(733.1, 148.0), HitTestEntry<HitTestTarget>#cbf69(_ReusableRenderView#e97eb), HitTestEntry<HitTestTarget>#d296d(<AutomatedTestWidgetsFlutterBinding>))
+#0      WidgetController._getElementPoint (package:flutter_test/src/controller.dart:2165:25)
+#1      WidgetController.getCenter (package:flutter_test/src/controller.dart:1947:12)
+#2      WidgetController.tap (package:flutter_test/src/controller.dart:1080:7)
+#3      main.choose (test/widget/vehicle_list_filters_test.dart:59:18)
+<asynchronous suspension>
+#4      main.<anonymous closure> (test/widget/vehicle_list_filters_test.dart:107:5)
+<asynchronous suspension>
+#5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#6      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
+<asynchronous suspension>
+#7      StackZoneSpecification._registerCallback.<anonymous closure> (package:stack_trace/src/stack_zone_specification.dart:114:42)
+<asynchronous suspension>
+To silence this warning, pass "warnIfMissed: false" to "tap()".
+To make this warning fatal, set WidgetController.hitTestWarningShouldBeFatal to true.
+
+01:24 +308: test/widget/vehicle_list_screen_test.dart: pagination asks the server for the next page
+01:24 +309: test/widget/vehicle_list_filters_test.dart: shows the current driver in the table and on cards
+01:24 +310: test/widget/vehicle_list_filters_test.dart: shows the current driver in the table and on cards
+01:24 +311: test/widget/vehicle_list_screen_test.dart: wider than 1024 px shows the full table
+01:25 +312: test/widget/vehicle_list_filters_test.dart: cards show the driver line on phones
+01:25 +313: test/widget/vehicle_list_filters_test.dart: cards show the driver line on phones
+01:25 +314: test/widget/vehicle_list_filters_test.dart: /vehicles?status=INACTIVE applies the filter from the URL
+01:25 +315: All tests passed!

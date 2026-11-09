@@ -35,6 +35,13 @@ abstract final class AppTheme {
         centerTitle: false,
         elevation: 0,
       ),
+      // Phones (360 px) keep a usable dialog width (default insets are 40).
+      dialogTheme: const DialogThemeData(
+        insetPadding: EdgeInsets.symmetric(
+          horizontal: AppSpacing.md,
+          vertical: AppSpacing.lg,
+        ),
+      ),
       cardTheme: CardThemeData(
         color: AppPalette.surface,
         elevation: 0,
