@@ -6,7 +6,15 @@ import 'package:go_router/go_router.dart';
 import '../../features/auth/presentation/auth_controller.dart';
 import '../../features/auth/presentation/login_screen.dart';
 import '../../features/dashboard/presentation/dashboard_screen.dart';
+import '../../features/documents/presentation/expiring_documents_screen.dart';
+import '../../features/drivers/presentation/driver_detail_screen.dart';
+import '../../features/drivers/presentation/driver_form_screen.dart';
+import '../../features/drivers/presentation/drivers_list_screen.dart';
+import '../../features/users/presentation/user_form_screen.dart';
+import '../../features/users/presentation/users_list_screen.dart';
+import '../../features/vehicles/data/vehicle_enums.dart';
 import '../../features/vehicles/presentation/vehicle_detail_screen.dart';
+import '../../features/vehicles/presentation/vehicle_detail_tab.dart';
 import '../../features/vehicles/presentation/vehicle_form_screen.dart';
 import '../../features/vehicles/presentation/vehicle_list_screen.dart';
 import '../../shared/widgets/app_shell.dart';
@@ -19,7 +27,9 @@ import 'app_routes.dart';
 /// * restoring a session → `/splash` (remembering the target),
 /// * signed out → `/login` (remembering the target),
 /// * signed in on `/login` or `/splash` → the remembered target or the
-///   dashboard.
+///   dashboard,
+/// * v2.1: a non-ADMIN on `/users…` → the dashboard (the backend 403 is the
+///   real control; this only keeps STAFF off pages that would fail).
 String? authRedirect(AsyncValue<AuthState> auth, Uri uri) {
   final path = uri.path;
   final isPublic = path == AppRoutes.login || path == AppRoutes.splash;
@@ -39,8 +49,15 @@ String? authRedirect(AsyncValue<AuthState> auth, Uri uri) {
         ? null
         : _withTarget(AppRoutes.login, target);
   }
+  final isAdmin = auth.valueOrNull?.user?.isAdmin ?? false;
   if (isPublic) {
-    return target ?? AppRoutes.dashboard;
+    final next = target ?? AppRoutes.dashboard;
+    return !isAdmin && AppRoutes.isAdminOnly(Uri.parse(next).path)
+        ? AppRoutes.dashboard
+        : next;
+  }
+  if (!isAdmin && AppRoutes.isAdminOnly(path)) {
+    return AppRoutes.dashboard;
   }
   return null;
 }
@@ -67,11 +84,11 @@ String? _safeTarget(String? target) {
   return target;
 }
 
-int? _vehicleId(GoRouterState state) =>
+int? _pathId(GoRouterState state) =>
     int.tryParse(state.pathParameters['id'] ?? '');
 
 Widget _vehicleScreen(GoRouterState state, Widget Function(int id) builder) {
-  final id = _vehicleId(state);
+  final id = _pathId(state);
   if (id == null) {
     return const Scaffold(
       body: ErrorView(
@@ -81,6 +98,45 @@ Widget _vehicleScreen(GoRouterState state, Widget Function(int id) builder) {
     );
   }
   return builder(id);
+}
+
+Widget _userScreen(GoRouterState state) {
+  final id = _pathId(state);
+  if (id == null) {
+    return const Scaffold(
+      body: ErrorView(
+        title: 'User not found',
+        message: 'This user address is not valid.',
+      ),
+    );
+  }
+  return UserFormScreen(userId: id);
+}
+
+Widget _driverScreen(GoRouterState state, Widget Function(int id) builder) {
+  final id = _pathId(state);
+  if (id == null) {
+    return const Scaffold(
+      body: ErrorView(
+        title: 'Driver not found',
+        message: 'This driver address is not valid.',
+      ),
+    );
+  }
+  return builder(id);
+}
+
+/// `/vehicles?status=MAINTENANCE&type=BUS` → a filtered list.
+Widget _vehicleList(GoRouterState state) {
+  final parameters = state.uri.queryParameters;
+  final hasFilters =
+      parameters.containsKey(AppRoutes.statusParameter) ||
+      parameters.containsKey(AppRoutes.typeParameter);
+  return VehicleListScreen(
+    hasRouteFilters: hasFilters,
+    routeStatus: VehicleStatus.tryParse(parameters[AppRoutes.statusParameter]),
+    routeType: VehicleType.tryParse(parameters[AppRoutes.typeParameter]),
+  );
 }
 
 final routerProvider = Provider<GoRouter>((ref) {
@@ -112,7 +168,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           ),
           GoRoute(
             path: AppRoutes.vehicles,
-            builder: (_, _) => const VehicleListScreen(),
+            builder: (_, state) => _vehicleList(state),
             routes: [
               GoRoute(
                 path: 'new',
@@ -122,7 +178,12 @@ final routerProvider = Provider<GoRouter>((ref) {
                 path: ':id',
                 builder: (_, state) => _vehicleScreen(
                   state,
-                  (id) => VehicleDetailScreen(vehicleId: id),
+                  (id) => VehicleDetailScreen(
+                    vehicleId: id,
+                    initialTab: VehicleDetailTab.fromQuery(
+                      state.uri.queryParameters[AppRoutes.tabParameter],
+                    ),
+                  ),
                 ),
                 routes: [
                   GoRoute(
@@ -135,6 +196,48 @@ final routerProvider = Provider<GoRouter>((ref) {
                 ],
               ),
             ],
+          ),
+          GoRoute(
+            path: AppRoutes.drivers,
+            builder: (_, _) => const DriversListScreen(),
+            routes: [
+              GoRoute(path: 'new', builder: (_, _) => const DriverFormScreen()),
+              GoRoute(
+                path: ':id',
+                builder: (_, state) => _driverScreen(
+                  state,
+                  (id) => DriverDetailScreen(driverId: id),
+                ),
+                routes: [
+                  GoRoute(
+                    path: 'edit',
+                    builder: (_, state) => _driverScreen(
+                      state,
+                      (id) => DriverFormScreen(driverId: id),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          GoRoute(
+            path: AppRoutes.users,
+            builder: (_, _) => const UsersListScreen(),
+            routes: [
+              GoRoute(path: 'new', builder: (_, _) => const UserFormScreen()),
+              GoRoute(
+                path: ':id/edit',
+                builder: (_, state) => _userScreen(state),
+              ),
+            ],
+          ),
+          GoRoute(
+            path: AppRoutes.expiringDocuments,
+            builder: (_, state) => ExpiringDocumentsScreen(
+              initialWithinDays: int.tryParse(
+                state.uri.queryParameters[AppRoutes.withinDaysParameter] ?? '',
+              ),
+            ),
           ),
         ],
       ),

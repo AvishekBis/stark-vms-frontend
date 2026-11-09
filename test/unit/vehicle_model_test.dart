@@ -89,7 +89,7 @@ void main() {
         'createdAt': '2026-11-06T09:15:00.000Z',
         'updatedAt': '2026-11-06T09:15:00.000Z',
         'createdBy': 'staff@stark.local',
-        'version': 2,
+        'version': 4,
       };
       expect(Vehicle.fromJson(Vehicle.fromJson(json).toJson()).toJson(), json);
     });

@@ -22,6 +22,8 @@ class PaginationBar extends StatelessWidget {
   final int totalPages;
   final int totalElements;
   final int pageSize;
+
+  /// With one option (or none) the "Rows per page" picker is hidden.
   final List<int> pageSizeOptions;
   final ValueChanged<int> onPageChanged;
   final ValueChanged<int> onPageSizeChanged;
@@ -46,30 +48,31 @@ class PaginationBar extends StatelessWidget {
             key: const Key('pagination.total'),
             style: textTheme.bodyMedium,
           ),
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text('Rows per page', style: textTheme.bodyMedium),
-              const SizedBox(width: AppSpacing.sm),
-              DropdownButton<int>(
-                key: const Key('pagination.size'),
-                value: pageSizeOptions.contains(pageSize) ? pageSize : null,
-                underline: const SizedBox.shrink(),
-                items: [
-                  for (final option in pageSizeOptions)
-                    DropdownMenuItem<int>(
-                      value: option,
-                      child: Text('$option'),
-                    ),
-                ],
-                onChanged: (value) {
-                  if (value != null && value != pageSize) {
-                    onPageSizeChanged(value);
-                  }
-                },
-              ),
-            ],
-          ),
+          if (pageSizeOptions.length > 1)
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text('Rows per page', style: textTheme.bodyMedium),
+                const SizedBox(width: AppSpacing.sm),
+                DropdownButton<int>(
+                  key: const Key('pagination.size'),
+                  value: pageSizeOptions.contains(pageSize) ? pageSize : null,
+                  underline: const SizedBox.shrink(),
+                  items: [
+                    for (final option in pageSizeOptions)
+                      DropdownMenuItem<int>(
+                        value: option,
+                        child: Text('$option'),
+                      ),
+                  ],
+                  onChanged: (value) {
+                    if (value != null && value != pageSize) {
+                      onPageSizeChanged(value);
+                    }
+                  },
+                ),
+              ],
+            ),
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [

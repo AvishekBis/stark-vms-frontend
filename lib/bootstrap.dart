@@ -11,7 +11,10 @@ import 'core/storage/preferences_provider.dart';
 import 'shared/widgets/missing_configuration_app.dart';
 
 /// Loads what the app needs before the first frame, then starts it.
-Future<void> bootstrap() async {
+///
+/// [overrides] lets the end-to-end test replace platform services that
+/// cannot be driven automatically (the browser's file dialog).
+Future<void> bootstrap({List<Override> overrides = const []}) async {
   WidgetsFlutterBinding.ensureInitialized();
   if (!AppConfig.isApiConfigured) {
     runApp(const MissingConfigurationApp());
@@ -21,7 +24,10 @@ Future<void> bootstrap() async {
   final preferences = await SharedPreferences.getInstance();
   runApp(
     ProviderScope(
-      overrides: [sharedPreferencesProvider.overrideWithValue(preferences)],
+      overrides: [
+        sharedPreferencesProvider.overrideWithValue(preferences),
+        ...overrides,
+      ],
       child: const StarkVmsApp(),
     ),
   );

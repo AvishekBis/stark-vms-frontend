@@ -19,6 +19,14 @@ abstract interface class AuthRepository {
 
   /// `GET /auth/me` with the current token.
   Future<User> currentUser();
+
+  /// `PUT /auth/me/password` (v2.1, any role) → 204. A wrong
+  /// [currentPassword] is a 400 with a field error on `currentPassword`
+  /// (not a 401). Afterwards the current token is no longer valid.
+  Future<void> changeOwnPassword({
+    required String currentPassword,
+    required String newPassword,
+  });
 }
 
 class ApiAuthRepository implements AuthRepository {
@@ -42,6 +50,17 @@ class ApiAuthRepository implements AuthRepository {
   Future<User> currentUser() async {
     final body = await _client.get('/auth/me');
     return User.fromJson(_asJsonObject(body));
+  }
+
+  @override
+  Future<void> changeOwnPassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    await _client.put(
+      '/auth/me/password',
+      body: {'currentPassword': currentPassword, 'newPassword': newPassword},
+    );
   }
 
   static Map<String, dynamic> _asJsonObject(Object? body) {

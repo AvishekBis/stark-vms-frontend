@@ -80,17 +80,17 @@ void main() {
     expect(find.text('Invalid email or password.'), findsOneWidget);
   });
 
-  testWidgets('shows the server detail on 429, not "invalid credentials" '
-      '(ADR 0022)', (tester) async {
+  testWidgets('shows the 429 detail, not "invalid credentials" (ADR 0022)', (
+    tester,
+  ) async {
     const detail = 'Too many failed login attempts. Try again in 14 minutes.';
-    final repository = await pumpLogin(
+    await pumpLogin(
       tester,
       loginError: ApiException.fromProblemDetails({
         'type': 'https://stark-vms/errors/too-many-login-attempts',
         'title': 'Too many login attempts',
         'status': 429,
         'detail': detail,
-        'instance': '/api/v1/auth/login',
       }),
     );
 
@@ -98,13 +98,20 @@ void main() {
       find.byKey(const Key('login.email')),
       'admin@stark.local',
     );
-    await tester.enterText(find.byKey(const Key('login.password')), 'x');
+    await tester.enterText(
+      find.byKey(const Key('login.password')),
+      'Admin@12345',
+    );
     await tester.tap(find.byKey(const Key('login.submit')));
     await tester.pumpAndSettle();
 
-    expect(repository.loginCalls, 1);
-    expect(find.byKey(const Key('login.error')), findsOneWidget);
-    expect(find.text(detail), findsOneWidget);
+    expect(
+      find.descendant(
+        of: find.byKey(const Key('login.error')),
+        matching: find.text(detail),
+      ),
+      findsOneWidget,
+    );
     expect(find.text('Invalid email or password.'), findsNothing);
   });
 

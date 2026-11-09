@@ -1,7 +1,7 @@
 name: stark_vms_frontend
-description: "Stark Group Vehicle Management System - Flutter Web frontend (v1.0)."
+description: "Stark Group Vehicle Management System - Flutter Web frontend (v2.0)."
 publish_to: 'none'
-version: 1.0.0+1
+version: 2.0.0+2
 
 environment:
   sdk: ^3.13.5
@@ -16,6 +16,8 @@ dependencies:
   go_router: 18.1.2
   intl: 0.20.3
   shared_preferences: 2.5.6
+  file_picker: 13.1.0
+  web: 1.1.1
 
 dev_dependencies:
   flutter_test:

@@ -40,6 +40,7 @@ Vehicle testVehicle({
   String? brand = 'Toyota',
   String? model = 'Axio',
   int? manufactureYear = 2019,
+  DriverSummary? currentDriver,
   int version = 0,
 }) {
   return Vehicle(
@@ -55,6 +56,7 @@ Vehicle testVehicle({
     createdAt: DateTime.utc(2026, 11, 6, 9, 15),
     updatedAt: DateTime.utc(2026, 11, 6, 9, 15),
     createdBy: 'admin@stark.local',
+    currentDriver: currentDriver,
     version: version,
   );
 }
@@ -70,11 +72,34 @@ class FakeAuthController extends AuthController {
 }
 
 class FakeAuthRepository implements AuthRepository {
-  FakeAuthRepository({this.loginError, this.loginResponse});
+  FakeAuthRepository({
+    this.loginError,
+    this.loginResponse,
+    this.changePasswordError,
+    this.loginErrorAfterPasswordChange,
+  });
 
   final ApiException? loginError;
   final LoginResponse? loginResponse;
   int loginCalls = 0;
+
+  /// Every login as (email, password).
+  final List<(String, String)> logins = [];
+
+  /// v2.1 `PUT /auth/me/password`: fails with this error when set.
+  ApiException? changePasswordError;
+
+  /// The re-login after a password change fails with this error when set.
+  ApiException? loginErrorAfterPasswordChange;
+
+  /// Every accepted change as (currentPassword, newPassword).
+  final List<(String, String)> passwordChanges = [];
+
+  /// Called inside every login (e.g. to fire a 401 event meanwhile).
+  void Function()? onLogin;
+
+  /// The token handed out after a password change (to tell sessions apart).
+  static const String tokenAfterPasswordChange = 'token-after-change';
 
   @override
   Future<LoginResponse> login({
@@ -82,21 +107,47 @@ class FakeAuthRepository implements AuthRepository {
     required String password,
   }) async {
     loginCalls++;
-    final error = loginError;
+    logins.add((email, password));
+    onLogin?.call();
+    final error = passwordChanges.isEmpty
+        ? loginError
+        : loginErrorAfterPasswordChange;
     if (error != null) {
       throw error;
     }
-    return loginResponse ??
+    final response =
+        loginResponse ??
         const LoginResponse(
           accessToken: 'test-token',
           tokenType: 'Bearer',
           expiresIn: Duration(hours: 1),
           user: adminUser,
         );
+    if (passwordChanges.isEmpty) {
+      return response;
+    }
+    return LoginResponse(
+      accessToken: tokenAfterPasswordChange,
+      tokenType: response.tokenType,
+      expiresIn: response.expiresIn,
+      user: response.user,
+    );
   }
 
   @override
   Future<User> currentUser() async => loginResponse?.user ?? adminUser;
+
+  @override
+  Future<void> changeOwnPassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    final error = changePasswordError;
+    if (error != null) {
+      throw error;
+    }
+    passwordChanges.add((currentPassword, newPassword));
+  }
 }
 
 /// In-memory vehicle repository with optional forced failures.
@@ -108,7 +159,7 @@ class FakeVehicleRepository implements VehicleRepository {
   ApiException? saveError;
   final List<VehicleQuery> listQueries = [];
 
-  /// The `version` sent with every update (contract 6.2).
+  /// The `version` sent with every update (contract 7.2.2).
   final List<int> updateVersions = [];
 
   @override
@@ -120,6 +171,8 @@ class FakeVehicleRepository implements VehicleRepository {
             query.search.toLowerCase(),
           ),
         )
+        .where((v) => query.status == null || v.status == query.status)
+        .where((v) => query.type == null || v.vehicleType == query.type)
         .toList();
     final start = query.page * query.size;
     final pageItems = matches.skip(start).take(query.size).toList();
@@ -175,8 +228,33 @@ class FakeVehicleRepository implements VehicleRepository {
     return updated;
   }
 
+  /// When set, delete fails with this error (e.g. 409 vehicle-has-history).
+  ApiException? deleteError;
+  final List<(int, VehicleStatus)> statusChanges = [];
+
   @override
   Future<void> delete(int id) async {
+    final error = deleteError;
+    if (error != null) {
+      throw error;
+    }
     vehicles.removeWhere((v) => v.id == id);
+  }
+
+  @override
+  Future<Vehicle> changeStatus(int id, VehicleStatus status) async {
+    statusChanges.add((id, status));
+    final index = vehicles.indexWhere((v) => v.id == id);
+    final old = vehicles[index];
+    final updated = testVehicle(
+      id: id,
+      vehicleNumber: old.vehicleNumber,
+      status: status,
+      currentDriver: status == VehicleStatus.inactive
+          ? null
+          : old.currentDriver,
+    );
+    vehicles[index] = updated;
+    return updated;
   }
 }

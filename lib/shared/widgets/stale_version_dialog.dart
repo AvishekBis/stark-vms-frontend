@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-/// Shown when a save is answered 409 `stale-version` (contract 6.2,
+/// Shown when a save is answered 409 `stale-version` (contract 7.2.3,
 /// ADR 0023): someone else changed the record since the form was opened.
 ///
 /// **Reload** refetches the record and refills the form (local edits are
