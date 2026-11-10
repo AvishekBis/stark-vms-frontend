@@ -1,5 +1,20 @@
 # Stark Group VMS — Frontend (Flutter Web)
 
+> ### Stark Group VMS — one project, two repositories
+>
+> The fleet management system is split the way it is deployed, as the course guideline (Section 9)
+> asks. To see or run the whole thing you need both; to simply *use* it, open the live site.
+>
+> | Repository | What is in it |
+> |---|---|
+> | [`stark-vms-backend`](https://github.com/AvishekBis/stark-vms-backend) | Spring Boot 3.5 / Java 21 REST API, PostgreSQL, Flyway, JWT |
+> | [`stark-vms-frontend`](https://github.com/AvishekBis/stark-vms-frontend) | Flutter Web client, Riverpod, go_router **(you are here)** |
+>
+> **Live site:** <https://stark-vms-avishek.netlify.app> · **API:** <https://stark-vms-backend-i2i2.onrender.com/api/v1> · **API docs:** <https://stark-vms-backend-i2i2.onrender.com/swagger-ui.html>
+>
+> Demo logins and the whole feature list are further down this page. The API is on Render's free
+> tier and sleeps when idle, so the first request can take up to a minute.
+
 Vehicle Management System for the Stark Group fleet. **Release v2.1 (Assignment 2 —
 Advanced Fleet Management, hardened)**, built on top of v1.0 (login, vehicle list, register /
 edit / delete with duplicate-number protection). v2.0 adds vehicle documents with expiry
@@ -93,7 +108,8 @@ lib/
 │   ├── platform/    FileOpener (Blob + object URL; web impl via package:web, VM stub)
 │   ├── router/      go_router with auth guard, query params (?status=, ?tab=, ?withinDays=)
 │   ├── storage/     SharedPreferences provider
-│   ├── theme/       AppTheme (one ThemeData), AppPalette, StatusColors extension, spacing
+│   ├── theme/       AppTheme (one ThemeData), AppPalette, AppDecorations, StatusColors
+│   │                extension, spacing (design language: ADR 0025)
 │   └── utils/       validators (vehicle, driver, maintenance), formatters (dates, BDT money,
 │                    file size), dates, json readers, API enum parsing, debouncer, clock,
 │                    ChangeTracker + the shared vehicle / driver change counters
@@ -101,7 +117,8 @@ lib/
 │   ├── models/      ExpiryStatus (BR-08: VALID / EXPIRING_SOON / EXPIRED)
 │   └── widgets/     AppShell, StatusBadge, ExpiryBadge, FilterMenu, SortMenu, RowActions,
 │                    DataTableFrame, DateFormField, LabeledValue, AsyncValueView/StateViews,
-│                    ConfirmDialog, PaginationBar, StaleVersionDialog (v2.1), …
+│                    ConfirmDialog, PaginationBar, StaleVersionDialog (v2.1), brand.dart
+│                    (PageHeader, SectionHeading, StatPlate, IconPlate, Ornament), …
 └── features/
     ├── auth/         (v1.0) login, session, AuthController; v2.1: 429 on login,
     │                 ChangePasswordDialog + automatic re-login (PUT /auth/me/password)
@@ -136,6 +153,24 @@ pages and the dashboard watch these counters, so the dashboard numbers always ma
 after a change. The vehicle and driver counters are declared in `core/utils/change_tracker.dart`
 because vehicles, drivers and assignments all bump them; the features do not import each
 other's providers for that.
+
+## Look and feel
+
+The navy-and-gold design is recorded in
+[ADR 0025](https://github.com/AvishekBis/stark-vms-backend/blob/main/docs/adr/0025-visual-identity-navy-and-gold.md) (why, the accessibility rule for
+gold, alternatives, costs). It lives in four files; widgets take colours and decoration from
+them and write no colour values of their own:
+
+| File | Holds |
+|---|---|
+| `lib/core/theme/app_palette.dart` | Every colour value (navy, gold, `goldInk`, cream background, status hues) |
+| `lib/core/theme/app_decorations.dart` | Gradients, shadows, cards, `accentCard`, banner, icon plate, gold rule |
+| `lib/core/theme/app_theme.dart` | The one `ThemeData` (serif headings, buttons, inputs, dialogs, tabs, tables, rail) |
+| `lib/shared/widgets/brand.dart` | `PageHeader`, `SectionHeading`, `StatPlate`, `IconPlate`, `Ornament` and the other shared brand widgets |
+
+Headings and figures use **Playfair Display** (Medium, SemiBold, Bold), bundled in
+`assets/fonts/` and declared in `pubspec.yaml`; it is licensed under the SIL Open Font License
+1.1 (`assets/fonts/OFL.txt`). Nothing is fetched at runtime.
 
 ## Features and requirements
 
@@ -214,7 +249,8 @@ Documents and Maintenance tabs, the expiring documents screen and both assignmen
 ### Screenshots
 
 Taken by the E2E journey below (`binding.takeScreenshot`, saved by
-`test_driver/integration_test.dart`) against the local backend with its seeded demo data.
+`test_driver/integration_test.dart`) against the local backend with its seeded demo data, on
+2026-11-10 with the navy-and-gold design ([ADR 0025](https://github.com/AvishekBis/stark-vms-backend/blob/main/docs/adr/0025-visual-identity-navy-and-gold.md)).
 
 | Login | Dashboard summary |
 |---|---|
@@ -241,13 +277,18 @@ flutter run -d chrome --web-port 5000 --dart-define=API_BASE_URL=http://localhos
 |---|---|---|
 | `API_BASE_URL` | none (required) | API base URL incl. `/api/v1`. No hard-coded fallback: a build without it shows an "API address not configured" screen |
 | `SHOW_DEMO_CREDENTIALS` | `true` in debug / profile, `false` in release | Show the demo account hint on the login screen. Pass `true` explicitly for a demo release build; production builds should leave it off |
+| `DEMO_ADMIN` | `admin@stark.local / Admin@12345` | The ADMIN line of that hint, as `email / password`. The default is the local seed account; a demo deployment passes the accounts of its own database |
+| `DEMO_STAFF` | `staff@stark.local / Staff@12345` | The STAFF line of that hint, same format |
 
 ## Build and deploy to Netlify
 
 ```bash
 flutter build web --release --dart-define=API_BASE_URL=https://stark-vms-backend-i2i2.onrender.com/api/v1
-# Course demo only: also show the demo account hint on the login screen.
+# Course demo only: also show the demo account hint on the login screen, with the
+# demo accounts of the deployed database (the defaults are the local seed accounts).
 #   --dart-define=SHOW_DEMO_CREDENTIALS=true
+#   --dart-define=DEMO_ADMIN="admin@stark.local / <password>"
+#   --dart-define=DEMO_STAFF="staff@stark.local / <password>"
 ```
 
 1. Deploy the `build/web` folder: drag-and-drop in the Netlify UI, or
@@ -289,7 +330,12 @@ This is a short summary. Each decision, with the alternatives considered and its
   keeps the session; the XSS trade-off and its mitigations are described under
   "Security notes and trade-offs".
 - **Demo credentials hint** is shown only in debug / profile builds, or in a release build made
-  with `--dart-define=SHOW_DEMO_CREDENTIALS=true` for a course demo.
+  with `--dart-define=SHOW_DEMO_CREDENTIALS=true` for a course demo. Its two lines come from
+  `DEMO_ADMIN` / `DEMO_STAFF`, because the local seed and the deployed database use different
+  demo passwords.
+- **Navy-and-gold design with a bundled serif** ([ADR 0025](https://github.com/AvishekBis/stark-vms-backend/blob/main/docs/adr/0025-visual-identity-navy-and-gold.md)):
+  one palette file, shared banner and card widgets, Playfair Display shipped in the app
+  instead of fetched at runtime. Trade-off: about 370 KB of font on first load.
 
 ## Security notes and trade-offs
 
@@ -324,12 +370,14 @@ This is a short summary. Each decision, with the alternatives considered and its
 ## Tests
 
 ```bash
-flutter test                  # unit + widget tests (315, including the v1.0 and v2.0 regression tests)
+flutter test                  # unit + widget tests (318, including the v1.0 and v2.0 regression tests)
 dart format --output=none --set-exit-if-changed .
 flutter analyze
 ```
 
-Last run (v2.1 with the security-review fixes, 2026-11-08): 315 tests passed, `flutter analyze` 0 issues, `dart format` 0 changed. Saved output of `flutter test --reporter expanded`:
+Last run (after the navy-and-gold restyle, ADR 0025, 2026-11-10): 318 tests passed, `flutter analyze`
+0 issues. The 315 tests of v2.1 passed unchanged; the 3 new ones are in `app_config_test.dart`.
+Saved output of `flutter test --reporter expanded`, from the v2.1 run of 2026-11-08 (315 tests):
 [`../docs/test-reports/frontend-test-report.txt`](docs/test-reports/frontend-test-report.txt).
 
 | Level | File | Covers |
@@ -345,7 +393,7 @@ Last run (v2.1 with the security-review fixes, 2026-11-08): 315 tests passed, `f
 | Widget | v1.0 files (`login_screen`, `vehicle_list_screen`, `vehicle_form_screen`, `vehicle_detail_screen`, `status_badge`, `state_views`, `missing_configuration`) | Regression, unchanged |
 | Unit | `test/unit/driver_actions_test.dart` | `DriverActions.deactivate` (same fields + INACTIVE, refreshes drivers and vehicles), `hasHistory` |
 | Unit | `test/unit/model_rules_test.dart` | `Vehicle.canReceiveDriver` (BR-05), `endsAssignmentOn`, `Driver.losesVehicleOn`, API enum parsing |
-| Unit | `test/unit/app_config_test.dart` | Demo credentials hint follows the build mode by default |
+| Unit | `test/unit/app_config_test.dart` | Demo credentials hint follows the build mode by default; its lines fall back to the local seed accounts, and `DEMO_ADMIN` / `DEMO_STAFF` override them |
 | Unit | `test/unit/business_date_test.dart` | "Today" in Asia/Dhaka (UTC+6) for BR-08/BR-09, expiring-docs link → first page |
 | Widget | `test/widget/responsive_v2_test.dart` | No overflow at 360 / 800 / 1400 px inside the app shell: dashboard, all four vehicle-detail tabs, drivers, users list and user form (v2.1), expiring documents; assign / status / upload / maintenance dialogs on a 360 x 640 phone |
 | Widget | `test/widget/responsive_lists_test.dart` | Maintenance tab, expiring documents and assignment history: cards at 360 px, compact table at 800 px, full table at 1400 px; rows open the right page |
@@ -416,8 +464,9 @@ What it does:
    the list shows "Disabled". Users cannot be deleted, so the journey leaves this one disabled
    (the `spring-boot:test-run` database is recreated on every start).
 
-Last run: 2026-11-08, Chrome via ChromeDriver against `./mvnw spring-boot:test-run` — all
-steps passed.
+Last full run: 2026-11-08, Chrome via ChromeDriver against `./mvnw spring-boot:test-run` — all
+steps passed. It ran again on 2026-11-10, after the navy-and-gold restyle, to retake the
+screenshots above.
 
 ## Known limitations / next steps
 

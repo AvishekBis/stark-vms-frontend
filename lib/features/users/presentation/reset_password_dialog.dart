@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/theme/app_decorations.dart';
 import '../../../core/theme/app_spacing.dart';
+import '../../../core/theme/status_colors.dart';
 import '../../../core/utils/validators.dart';
+import '../../../shared/widgets/brand.dart';
 import '../../../shared/widgets/feedback.dart';
 import '../data/user_account.dart';
 import 'user_providers.dart';
@@ -69,10 +72,16 @@ class _ResetPasswordDialogState extends ConsumerState<ResetPasswordDialog> {
     final state = ref.watch(resetPasswordControllerProvider);
     final controller = ref.read(resetPasswordControllerProvider.notifier);
     final theme = Theme.of(context);
+    final danger = StatusColors.of(context).danger;
     final generalError = state.errorMessage;
 
     return AlertDialog(
       key: const Key('resetPassword.dialog'),
+      icon: const IconPlate(icon: Icons.lock_reset, size: 44),
+      iconPadding: const EdgeInsets.only(
+        top: AppSpacing.lg,
+        bottom: AppSpacing.sm,
+      ),
       title: const Text('Reset password'),
       content: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: AppSpacing.dialogMaxWidth),
@@ -129,11 +138,41 @@ class _ResetPasswordDialogState extends ConsumerState<ResetPasswordDialog> {
                 ),
                 if (generalError != null) ...[
                   const SizedBox(height: AppSpacing.md),
-                  Text(
-                    generalError,
-                    key: const Key('resetPassword.error'),
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: theme.colorScheme.error,
+                  // The message keeps its danger colour and gains a plate
+                  // and a tinted panel, so it is not colour alone.
+                  DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: danger.withValues(alpha: 0.08),
+                      borderRadius: BorderRadius.circular(
+                        AppDecorations.radius,
+                      ),
+                      border: Border.all(color: danger.withValues(alpha: 0.4)),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(
+                        AppSpacing.sm + AppSpacing.xs,
+                      ),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          IconPlate(
+                            icon: Icons.error_outline,
+                            tint: danger.withValues(alpha: 0.14),
+                            color: danger,
+                            size: 30,
+                          ),
+                          const SizedBox(width: AppSpacing.sm),
+                          Expanded(
+                            child: Text(
+                              generalError,
+                              key: const Key('resetPassword.error'),
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                color: danger,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ],

@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../../core/theme/app_palette.dart';
+import '../../core/theme/status_colors.dart';
+
 /// Edit and (for admins) delete icon buttons of a list row or card.
 ///
 /// The buttons are keyed `'<keyPrefix>.edit.<id>'` and
@@ -29,13 +32,14 @@ class RowActions extends StatelessWidget {
           key: ValueKey('$keyPrefix.edit.$id'),
           tooltip: 'Edit',
           onPressed: onEdit,
+          color: AppPalette.navy,
           icon: const Icon(Icons.edit_outlined),
         ),
         if (isAdmin)
           IconButton(
             key: ValueKey('$keyPrefix.delete.$id'),
             tooltip: 'Delete',
-            color: Theme.of(context).colorScheme.error,
+            color: StatusColors.of(context).danger,
             onPressed: onDelete,
             icon: const Icon(Icons.delete_outline),
           ),

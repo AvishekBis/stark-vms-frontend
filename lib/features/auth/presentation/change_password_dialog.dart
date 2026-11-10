@@ -5,6 +5,7 @@ import '../../../core/network/api_exception.dart';
 import '../../../core/network/form_errors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/utils/validators.dart';
+import '../../../shared/widgets/brand.dart';
 import '../../../shared/widgets/feedback.dart';
 import 'auth_controller.dart';
 
@@ -130,7 +131,7 @@ class _ChangePasswordDialogState extends ConsumerState<ChangePasswordDialog> {
 
     return AlertDialog(
       key: const Key('changePassword.dialog'),
-      title: const Text('Change password'),
+      title: const DialogTitle(icon: Icons.password, title: 'Change password'),
       content: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: AppSpacing.dialogMaxWidth),
         child: SingleChildScrollView(

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../core/theme/app_palette.dart';
+
 /// One choice of a [FilterMenu]; `value == null` means "all".
 class _FilterChoice<T> {
   const _FilterChoice(this.value);
@@ -48,7 +50,18 @@ class FilterMenu<T> extends StatelessWidget {
           ),
       ],
       child: Chip(
-        avatar: Icon(isFiltered ? Icons.filter_alt : Icons.filter_alt_outlined),
+        avatar: Icon(
+          isFiltered ? Icons.filter_alt : Icons.filter_alt_outlined,
+          // A gold glyph marks an active filter; the chip label still names
+          // the value, so colour is never the only signal.
+          color: isFiltered ? AppPalette.goldInk : AppPalette.inkMuted,
+        ),
+        backgroundColor: isFiltered
+            ? AppPalette.goldTint
+            : AppPalette.surfaceMuted,
+        side: BorderSide(
+          color: isFiltered ? AppPalette.goldSoft : AppPalette.outlineSoft,
+        ),
         label: Text(
           '$label: ${current != null ? optionLabel(current) : allLabel}',
         ),

@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/theme/app_decorations.dart';
+import '../../../core/theme/app_palette.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/utils/formatters.dart';
+import '../../../shared/widgets/brand.dart';
 import '../../../shared/widgets/confirm_dialog.dart';
 import '../../../shared/widgets/data_table_frame.dart';
 import '../../../shared/widgets/feedback.dart';
@@ -62,6 +65,40 @@ class _MaintenanceTabState extends ConsumerState<MaintenanceTab> {
     final summary = history.valueOrNull;
     final screenSize = ScreenSize.fromWidth(MediaQuery.sizeOf(context).width);
 
+    final isCompact = screenSize == ScreenSize.compact;
+    // The total is the figure of this tab: the serif face, with the record
+    // count under it. On a phone it stays plain text — the tab gets about
+    // 140 px of height there, which a plate and a rule would eat into.
+    final totalBlock = Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          summary == null
+              ? 'Total cost'
+              : 'Total cost ${Formatters.money(summary.totalCost)}',
+          key: const Key('maintenance.totalCost'),
+          style: isCompact
+              ? theme.textTheme.titleMedium
+              : theme.textTheme.titleLarge,
+        ),
+        if (!isCompact)
+          AppDecorations.goldRule(
+            width: AppSpacing.xl,
+            margin: const EdgeInsets.only(top: AppSpacing.xs),
+          ),
+        if (summary != null)
+          Text(
+            '${Formatters.count(summary.recordCount)} '
+            '${summary.recordCount == 1 ? 'record' : 'records'} in total',
+            key: const Key('maintenance.recordCount'),
+            style: isCompact
+                ? theme.textTheme.bodyMedium
+                : theme.textTheme.bodySmall,
+          ),
+      ],
+    );
+
     return Padding(
       padding: const EdgeInsets.all(AppSpacing.md),
       child: Column(
@@ -73,25 +110,23 @@ class _MaintenanceTabState extends ConsumerState<MaintenanceTab> {
             spacing: AppSpacing.md,
             runSpacing: AppSpacing.sm,
             children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    summary == null
-                        ? 'Total cost'
-                        : 'Total cost ${Formatters.money(summary.totalCost)}',
-                    key: const Key('maintenance.totalCost'),
-                    style: theme.textTheme.titleMedium,
-                  ),
-                  if (summary != null)
-                    Text(
-                      '${Formatters.count(summary.recordCount)} '
-                      '${summary.recordCount == 1 ? 'record' : 'records'} in total',
-                      key: const Key('maintenance.recordCount'),
-                      style: theme.textTheme.bodyMedium,
+              if (isCompact)
+                totalBlock
+              else
+                // The same toolbar figure as the Documents tab: a receipt
+                // glyph on a gold plate, the serif total and a short gold
+                // rule, with no card of its own.
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const IconPlate(
+                      icon: Icons.receipt_long_outlined,
+                      size: 34,
                     ),
-                ],
-              ),
+                    const SizedBox(width: AppSpacing.sm + AppSpacing.xs),
+                    Flexible(child: totalBlock),
+                  ],
+                ),
               FilledButton.icon(
                 key: const Key('maintenance.add'),
                 onPressed: _add,
@@ -207,12 +242,22 @@ class _MaintenanceTable extends StatelessWidget {
           const DataColumn(label: Text('Actions')),
         ],
         rows: [
-          for (final record in records)
+          for (final (index, record) in records.indexed)
             DataRow(
               key: ValueKey('maintenance.row.${record.id}'),
+              color: DataTableFrame.zebraRow(index),
               cells: [
                 DataCell(Text(Formatters.date(record.serviceDate))),
-                DataCell(Text(record.maintenanceType.label)),
+                DataCell(
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const IconPlate(icon: Icons.build_outlined, size: 28),
+                      const SizedBox(width: AppSpacing.sm),
+                      Text(record.maintenanceType.label),
+                    ],
+                  ),
+                ),
                 DataCell(Text(Formatters.money(record.cost))),
                 DataCell(
                   TableCellText(
@@ -345,8 +390,9 @@ class _MaintenanceCard extends StatelessWidget {
         '${Formatters.count(record.odometerKm!)} km',
     ].join(' · ');
     final notes = record.notes?.trim();
-    return Card(
+    return AccentEdgeCard(
       key: ValueKey('maintenance.record.${record.id}'),
+      accent: AppPalette.gold,
       child: Padding(
         padding: const EdgeInsets.fromLTRB(
           AppSpacing.md,
@@ -357,6 +403,13 @@ class _MaintenanceCard extends StatelessWidget {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            const Padding(
+              padding: EdgeInsets.only(
+                top: AppSpacing.xs,
+                right: AppSpacing.sm + AppSpacing.xs,
+              ),
+              child: IconPlate(icon: Icons.build_outlined, size: 34),
+            ),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -369,9 +422,10 @@ class _MaintenanceCard extends StatelessWidget {
                         record.maintenanceType.label,
                         style: textTheme.titleMedium,
                       ),
+                      // The cost is the figure of the row: serif, in navy.
                       Text(
                         Formatters.money(record.cost),
-                        style: textTheme.titleSmall,
+                        style: textTheme.titleLarge,
                       ),
                     ],
                   ),

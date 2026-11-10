@@ -5,7 +5,9 @@ import 'package:go_router/go_router.dart';
 import '../../../core/network/page_response.dart';
 import '../../../core/router/app_routes.dart';
 import '../../../core/theme/app_spacing.dart';
+import '../../../core/theme/status_colors.dart';
 import '../../../core/utils/formatters.dart';
+import '../../../shared/widgets/brand.dart';
 import '../../../shared/widgets/data_table_frame.dart';
 import '../../../shared/widgets/expiry_badge.dart';
 import '../../../shared/widgets/pagination_bar.dart';
@@ -13,6 +15,7 @@ import '../../../shared/widgets/state_views.dart';
 import '../../vehicles/presentation/vehicle_detail_tab.dart';
 import '../data/vehicle_document.dart';
 import 'document_providers.dart';
+import 'documents_tab.dart';
 
 /// Fleet-wide expired and expiring documents (FR-D02), paginated, with a
 /// 7 / 30 / 60 / 90 day window. Cards below 600 px, a compact table up to
@@ -50,7 +53,6 @@ class _ExpiringDocumentsScreenState
     final query = ref.watch(expiringDocumentsQueryProvider);
     final value = ref.watch(expiringDocumentsProvider);
     final controller = ref.read(expiringDocumentsQueryProvider.notifier);
-    final textTheme = Theme.of(context).textTheme;
     final screenSize = ScreenSize.fromWidth(MediaQuery.sizeOf(context).width);
 
     return Scaffold(
@@ -64,34 +66,30 @@ class _ExpiringDocumentsScreenState
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Wrap(
-              alignment: WrapAlignment.spaceBetween,
-              crossAxisAlignment: WrapCrossAlignment.center,
-              spacing: AppSpacing.md,
-              runSpacing: AppSpacing.sm,
-              children: [
-                Text('Expiring documents', style: textTheme.headlineSmall),
-                SegmentedButton<int>(
-                  key: const Key('expiring.withinDays'),
-                  showSelectedIcon: false,
-                  segments: [
-                    for (final days in ExpiringDocumentsQuery.withinDaysOptions)
-                      ButtonSegment<int>(
-                        value: days,
-                        label: Text('$days days'),
-                      ),
-                  ],
-                  selected: {query.withinDays},
-                  onSelectionChanged: (selection) =>
-                      controller.setWithinDays(selection.first),
-                ),
-              ],
+            // The page opens on the navy banner; the window picker sits just
+            // under it, where it keeps the full page width on a 360 px phone.
+            PageHeader(
+              title: 'Expiring documents',
+              icon: Icons.event_note_outlined,
+              dense: screenSize == ScreenSize.compact,
+              subtitle:
+                  'Expired documents and documents that expire within '
+                  '${query.withinDays} days, soonest first.',
             ),
-            const SizedBox(height: AppSpacing.xs),
-            Text(
-              'Expired documents and documents that expire within '
-              '${query.withinDays} days, soonest first.',
-              style: textTheme.bodyMedium,
+            const SizedBox(height: AppSpacing.md),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: SegmentedButton<int>(
+                key: const Key('expiring.withinDays'),
+                showSelectedIcon: false,
+                segments: [
+                  for (final days in ExpiringDocumentsQuery.withinDaysOptions)
+                    ButtonSegment<int>(value: days, label: Text('$days days')),
+                ],
+                selected: {query.withinDays},
+                onSelectionChanged: (selection) =>
+                    controller.setWithinDays(selection.first),
+              ),
             ),
             const SizedBox(height: AppSpacing.sm),
             SizedBox(
@@ -186,13 +184,19 @@ class _ExpiringDocumentsTable extends StatelessWidget {
           const DataColumn(label: Text('Status')),
         ],
         rows: [
-          for (final document in documents)
+          for (final (index, document) in documents.indexed)
             DataRow(
               key: ValueKey('expiring.row.${document.id}'),
+              color: DataTableFrame.zebraRow(index),
               onSelectChanged: (_) => _openDocuments(context, document),
               cells: [
                 DataCell(Text(document.vehicleNumber)),
-                DataCell(Text(document.documentType.label)),
+                DataCell(
+                  DocumentTypeCell(
+                    status: document.expiryStatus,
+                    label: document.documentType.label,
+                  ),
+                ),
                 if (isFull)
                   DataCell(Text(Formatters.orMissing(document.documentNumber))),
                 if (isFull) DataCell(Text(Formatters.date(document.issueDate))),
@@ -224,17 +228,47 @@ class ExpiringDocumentTile extends StatelessWidget {
       if (document.documentNumber != null) document.documentNumber!,
       'expires ${Formatters.date(document.expiryDate)}',
     ].join(' · ');
-    return Card(
+    final textTheme = Theme.of(context).textTheme;
+    final tone = StatusColors.of(context)
+        .background(document.expiryStatus.tone);
+    return AccentEdgeCard(
       key: ValueKey('expiring.document.${document.id}'),
-      child: ListTile(
-        leading: const Icon(Icons.description_outlined),
-        title: Text(document.documentType.label),
-        subtitle: Text(subtitle),
-        trailing: ExpiryBadge(
-          status: document.expiryStatus,
-          daysUntilExpiry: document.daysUntilExpiry,
+      accent: tone,
+      onTap: () => _openDocuments(context, document),
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.md),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            IconPlate(
+              icon: documentStatusIcon(document.expiryStatus),
+              tint: tone.withValues(alpha: 0.14),
+              color: tone,
+              size: 38,
+            ),
+            const SizedBox(width: AppSpacing.md),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    document.documentType.label,
+                    style: textTheme.titleMedium,
+                  ),
+                  const SizedBox(height: AppSpacing.xs),
+                  Text(subtitle, style: textTheme.bodySmall),
+                  const SizedBox(height: AppSpacing.sm),
+                  // The badge keeps its words, so the tone of the card
+                  // edge and the plate is never the only signal.
+                  ExpiryBadge(
+                    status: document.expiryStatus,
+                    daysUntilExpiry: document.daysUntilExpiry,
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
-        onTap: () => _openDocuments(context, document),
       ),
     );
   }

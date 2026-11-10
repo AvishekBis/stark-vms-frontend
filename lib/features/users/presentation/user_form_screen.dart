@@ -3,8 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/router/app_routes.dart';
+import '../../../core/theme/app_decorations.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/utils/validators.dart';
+import '../../../shared/widgets/brand.dart';
 import '../../../shared/widgets/confirm_dialog.dart';
 import '../../../shared/widgets/feedback.dart';
 import '../../../shared/widgets/stale_version_dialog.dart';
@@ -173,7 +175,9 @@ class _UserFormViewState extends ConsumerState<_UserFormView> {
     final initial = widget.initial;
     final isSelf =
         initial != null && initial.id == ref.watch(currentUserProvider)?.id;
-    final textTheme = Theme.of(context).textTheme;
+    final isCompact =
+        ScreenSize.fromWidth(MediaQuery.sizeOf(context).width) ==
+        ScreenSize.compact;
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(AppSpacing.md),
@@ -181,185 +185,218 @@ class _UserFormViewState extends ConsumerState<_UserFormView> {
         alignment: Alignment.topCenter,
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: AppSpacing.formMaxWidth),
-          child: Card(
-            child: Padding(
-              padding: const EdgeInsets.all(AppSpacing.lg),
-              child: Form(
-                key: _formKey,
-                autovalidateMode: _autovalidateMode,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Text(
-                      _isEdit ? 'Edit user' : 'Add user',
-                      style: textTheme.headlineSmall,
-                    ),
-                    const SizedBox(height: AppSpacing.xs),
-                    Text(
-                      'Fields marked * are required.',
-                      style: textTheme.bodySmall,
-                    ),
-                    const SizedBox(height: AppSpacing.lg),
-                    TextFormField(
-                      key: const Key('userForm.email'),
-                      controller: _email,
-                      readOnly: _isEdit,
-                      enabled: !_isEdit,
-                      autofocus: !_isEdit,
-                      keyboardType: TextInputType.emailAddress,
-                      textInputAction: TextInputAction.next,
-                      decoration: InputDecoration(
-                        labelText: _isEdit ? 'E-mail' : 'E-mail *',
-                        helperText: _isEdit
-                            ? 'The e-mail cannot be changed.'
-                            : 'Used to log in; stored in lower case.',
-                        errorText: formState.errorFor('email'),
-                        errorMaxLines: 2,
-                      ),
-                      validator: _isEdit ? null : UserValidators.email,
-                      onChanged: (_) => controller.clearFieldError('email'),
-                    ),
-                    const SizedBox(height: AppSpacing.md),
-                    TextFormField(
-                      key: const Key('userForm.fullName'),
-                      controller: _name,
-                      textInputAction: TextInputAction.next,
-                      textCapitalization: TextCapitalization.words,
-                      decoration: InputDecoration(
-                        labelText: 'Full name *',
-                        errorText: formState.errorFor('fullName'),
-                      ),
-                      validator: UserValidators.fullName,
-                      onChanged: (_) => controller.clearFieldError('fullName'),
-                    ),
-                    const SizedBox(height: AppSpacing.md),
-                    DropdownButtonFormField<UserRole>(
-                      key: const Key('userForm.role'),
-                      initialValue: _role,
-                      decoration: InputDecoration(
-                        labelText: 'Role *',
-                        errorText: formState.errorFor('role'),
-                        helperText: isSelf ? selfModificationHint : null,
-                        helperMaxLines: 2,
-                      ),
-                      items: [
-                        for (final role in UserRole.values)
-                          DropdownMenuItem(
-                            value: role,
-                            child: Text(role.label),
-                          ),
-                      ],
-                      onChanged: isSelf
-                          ? null
-                          : (value) {
-                              if (value != null) {
-                                setState(() => _role = value);
-                                controller.clearFieldError('role');
-                              }
-                            },
-                    ),
-                    if (_isEdit) ...[
-                      const SizedBox(height: AppSpacing.md),
-                      SwitchListTile(
-                        key: const Key('userForm.enabled'),
-                        contentPadding: EdgeInsets.zero,
-                        title: const Text('Account enabled'),
-                        subtitle: Text(
-                          isSelf
-                              ? selfModificationHint
-                              : _enabled
-                              ? 'The user can log in.'
-                              : 'The user cannot log in.',
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              PageHeader(
+                title: _isEdit ? 'Edit user' : 'Add user',
+                subtitle: 'Fields marked * are required.',
+                icon: Icons.manage_accounts_outlined,
+                dense: isCompact,
+              ),
+              const SizedBox(height: AppSpacing.md),
+              Container(
+                decoration: AppDecorations.card(),
+                child: Padding(
+                  padding: const EdgeInsets.all(AppSpacing.lg),
+                  child: Form(
+                    key: _formKey,
+                    autovalidateMode: _autovalidateMode,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        const SectionHeading(
+                          title: 'Account',
+                          icon: Icons.person_outline,
+                          rule: false,
                         ),
-                        value: _enabled,
-                        onChanged: isSelf
-                            ? null
-                            : (value) {
-                                setState(() => _enabled = value);
-                                controller.clearFieldError('enabled');
-                              },
-                      ),
-                    ] else ...[
-                      const SizedBox(height: AppSpacing.md),
-                      TextFormField(
-                        key: const Key('userForm.password'),
-                        controller: _password,
-                        obscureText: _obscure,
-                        autofillHints: const [AutofillHints.newPassword],
-                        textInputAction: TextInputAction.next,
-                        decoration: InputDecoration(
-                          labelText: 'Password *',
-                          helperText:
-                              'At least ${UserValidators.passwordMinLength} '
-                              'characters. Tell the user and ask them to '
-                              'change it.',
-                          helperMaxLines: 2,
-                          errorText: formState.errorFor('password'),
-                          errorMaxLines: 2,
-                          suffixIcon: IconButton(
-                            tooltip: _obscure
-                                ? 'Show password'
-                                : 'Hide password',
-                            onPressed: () =>
-                                setState(() => _obscure = !_obscure),
-                            icon: Icon(
-                              _obscure
-                                  ? Icons.visibility_outlined
-                                  : Icons.visibility_off_outlined,
+                        const SizedBox(height: AppSpacing.md),
+                        TextFormField(
+                          key: const Key('userForm.email'),
+                          controller: _email,
+                          readOnly: _isEdit,
+                          enabled: !_isEdit,
+                          autofocus: !_isEdit,
+                          keyboardType: TextInputType.emailAddress,
+                          textInputAction: TextInputAction.next,
+                          decoration: InputDecoration(
+                            labelText: _isEdit ? 'E-mail' : 'E-mail *',
+                            helperText: _isEdit
+                                ? 'The e-mail cannot be changed.'
+                                : 'Used to log in; stored in lower case.',
+                            errorText: formState.errorFor('email'),
+                            errorMaxLines: 2,
+                          ),
+                          validator: _isEdit ? null : UserValidators.email,
+                          onChanged: (_) => controller.clearFieldError('email'),
+                        ),
+                        const SizedBox(height: AppSpacing.md),
+                        TextFormField(
+                          key: const Key('userForm.fullName'),
+                          controller: _name,
+                          textInputAction: TextInputAction.next,
+                          textCapitalization: TextCapitalization.words,
+                          decoration: InputDecoration(
+                            labelText: 'Full name *',
+                            errorText: formState.errorFor('fullName'),
+                          ),
+                          validator: UserValidators.fullName,
+                          onChanged: (_) =>
+                              controller.clearFieldError('fullName'),
+                        ),
+                        const SizedBox(height: AppSpacing.lg),
+                        const SectionHeading(
+                          title: 'Access',
+                          icon: Icons.shield_outlined,
+                          rule: false,
+                        ),
+                        const SizedBox(height: AppSpacing.md),
+                        DropdownButtonFormField<UserRole>(
+                          key: const Key('userForm.role'),
+                          initialValue: _role,
+                          decoration: InputDecoration(
+                            labelText: 'Role *',
+                            errorText: formState.errorFor('role'),
+                            helperText: isSelf ? selfModificationHint : null,
+                            helperMaxLines: 2,
+                          ),
+                          items: [
+                            for (final role in UserRole.values)
+                              DropdownMenuItem(
+                                value: role,
+                                child: Text(role.label),
+                              ),
+                          ],
+                          onChanged: isSelf
+                              ? null
+                              : (value) {
+                                  if (value != null) {
+                                    setState(() => _role = value);
+                                    controller.clearFieldError('role');
+                                  }
+                                },
+                        ),
+                        if (_isEdit) ...[
+                          const SizedBox(height: AppSpacing.md),
+                          // Its own Material: the card around the form is a
+                          // decorated box, which would otherwise swallow the
+                          // tile's fill and ink.
+                          Material(
+                            type: MaterialType.transparency,
+                            child: SwitchListTile(
+                              key: const Key('userForm.enabled'),
+                              contentPadding: EdgeInsets.zero,
+                              title: const Text('Account enabled'),
+                              subtitle: Text(
+                                isSelf
+                                    ? selfModificationHint
+                                    : _enabled
+                                    ? 'The user can log in.'
+                                    : 'The user cannot log in.',
+                              ),
+                              value: _enabled,
+                              onChanged: isSelf
+                                  ? null
+                                  : (value) {
+                                      setState(() => _enabled = value);
+                                      controller.clearFieldError('enabled');
+                                    },
                             ),
                           ),
-                        ),
-                        validator: UserValidators.newPassword,
-                        onChanged: (_) =>
-                            controller.clearFieldError('password'),
-                      ),
-                      const SizedBox(height: AppSpacing.md),
-                      TextFormField(
-                        key: const Key('userForm.confirmPassword'),
-                        controller: _confirm,
-                        obscureText: _obscure,
-                        decoration: const InputDecoration(
-                          labelText: 'Repeat password *',
-                        ),
-                        validator: (value) => UserValidators.confirmPassword(
-                          value,
-                          _password.text,
-                        ),
-                        onFieldSubmitted: (_) => _submit(),
-                      ),
-                    ],
-                    const SizedBox(height: AppSpacing.lg),
-                    Wrap(
-                      alignment: WrapAlignment.end,
-                      spacing: AppSpacing.sm,
-                      runSpacing: AppSpacing.sm,
-                      children: [
-                        OutlinedButton(
-                          key: const Key('userForm.cancel'),
-                          onPressed: formState.isSubmitting
-                              ? null
-                              : () => context.go(AppRoutes.users),
-                          child: const Text('Cancel'),
-                        ),
-                        FilledButton.icon(
-                          key: const Key('userForm.save'),
-                          onPressed: formState.isSubmitting ? null : _submit,
-                          icon: formState.isSubmitting
-                              ? const SizedBox.square(
-                                  dimension: AppSpacing.md,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                  ),
-                                )
-                              : const Icon(Icons.save_outlined),
-                          label: Text(_isEdit ? 'Save changes' : 'Add user'),
+                        ] else ...[
+                          const SizedBox(height: AppSpacing.lg),
+                          const SectionHeading(
+                            title: 'First password',
+                            icon: Icons.lock_outline,
+                            rule: false,
+                          ),
+                          const SizedBox(height: AppSpacing.md),
+                          TextFormField(
+                            key: const Key('userForm.password'),
+                            controller: _password,
+                            obscureText: _obscure,
+                            autofillHints: const [AutofillHints.newPassword],
+                            textInputAction: TextInputAction.next,
+                            decoration: InputDecoration(
+                              labelText: 'Password *',
+                              helperText:
+                                  'At least ${UserValidators.passwordMinLength} '
+                                  'characters. Tell the user and ask them to '
+                                  'change it.',
+                              helperMaxLines: 2,
+                              errorText: formState.errorFor('password'),
+                              errorMaxLines: 2,
+                              suffixIcon: IconButton(
+                                tooltip: _obscure
+                                    ? 'Show password'
+                                    : 'Hide password',
+                                onPressed: () =>
+                                    setState(() => _obscure = !_obscure),
+                                icon: Icon(
+                                  _obscure
+                                      ? Icons.visibility_outlined
+                                      : Icons.visibility_off_outlined,
+                                ),
+                              ),
+                            ),
+                            validator: UserValidators.newPassword,
+                            onChanged: (_) =>
+                                controller.clearFieldError('password'),
+                          ),
+                          const SizedBox(height: AppSpacing.md),
+                          TextFormField(
+                            key: const Key('userForm.confirmPassword'),
+                            controller: _confirm,
+                            obscureText: _obscure,
+                            decoration: const InputDecoration(
+                              labelText: 'Repeat password *',
+                            ),
+                            validator: (value) =>
+                                UserValidators.confirmPassword(
+                                  value,
+                                  _password.text,
+                                ),
+                            onFieldSubmitted: (_) => _submit(),
+                          ),
+                        ],
+                        const SizedBox(height: AppSpacing.lg),
+                        Wrap(
+                          alignment: WrapAlignment.end,
+                          spacing: AppSpacing.sm,
+                          runSpacing: AppSpacing.sm,
+                          children: [
+                            OutlinedButton(
+                              key: const Key('userForm.cancel'),
+                              onPressed: formState.isSubmitting
+                                  ? null
+                                  : () => context.go(AppRoutes.users),
+                              child: const Text('Cancel'),
+                            ),
+                            FilledButton.icon(
+                              key: const Key('userForm.save'),
+                              onPressed: formState.isSubmitting
+                                  ? null
+                                  : _submit,
+                              icon: formState.isSubmitting
+                                  ? const SizedBox.square(
+                                      dimension: AppSpacing.md,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                      ),
+                                    )
+                                  : const Icon(Icons.save_outlined),
+                              label: Text(
+                                _isEdit ? 'Save changes' : 'Add user',
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
-                  ],
+                  ),
                 ),
               ),
-            ),
+            ],
           ),
         ),
       ),

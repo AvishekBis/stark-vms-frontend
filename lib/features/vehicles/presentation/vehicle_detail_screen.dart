@@ -4,8 +4,11 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/network/api_exception.dart';
 import '../../../core/router/app_routes.dart';
+import '../../../core/theme/app_decorations.dart';
+import '../../../core/theme/app_palette.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/utils/formatters.dart';
+import '../../../shared/widgets/brand.dart';
 import '../../../shared/widgets/confirm_dialog.dart';
 import '../../../shared/widgets/feedback.dart';
 import '../../../shared/widgets/labeled_value.dart';
@@ -19,6 +22,7 @@ import '../../maintenance/presentation/maintenance_tab.dart';
 import '../data/vehicle.dart';
 import 'vehicle_detail_tab.dart';
 import 'vehicle_providers.dart';
+import '../../../shared/widgets/banner_actions.dart';
 import 'widgets/delete_vehicle_flow.dart';
 import 'widgets/vehicle_status_badge.dart';
 import 'widgets/vehicle_status_dialog.dart';
@@ -66,7 +70,6 @@ class _VehicleTabs extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
     final isCompact =
         ScreenSize.fromWidth(MediaQuery.sizeOf(context).width) ==
         ScreenSize.compact;
@@ -77,54 +80,43 @@ class _VehicleTabs extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(
+            padding: EdgeInsets.fromLTRB(
               AppSpacing.md,
-              AppSpacing.sm,
+              isCompact ? AppSpacing.sm : AppSpacing.md,
               AppSpacing.md,
               0,
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                TextButton.icon(
-                  onPressed: () => context.go(AppRoutes.vehicles),
-                  icon: const Icon(Icons.arrow_back),
-                  label: const Text('All vehicles'),
-                ),
-                Wrap(
-                  spacing: AppSpacing.md,
-                  runSpacing: AppSpacing.sm,
-                  crossAxisAlignment: WrapCrossAlignment.center,
-                  children: [
-                    Text(
-                      vehicle.vehicleNumber,
-                      key: const Key('vehicleDetail.number'),
-                      style: textTheme.headlineSmall,
-                    ),
-                    VehicleStatusBadge(status: vehicle.status),
-                    if (vehicle.brandModel != null)
-                      Text(vehicle.brandModel!, style: textTheme.titleMedium),
-                  ],
-                ),
+            child: _VehicleBanner(vehicle: vehicle, isCompact: isCompact),
+          ),
+          // The tab strip sits on its own white band, so the gold indicator
+          // reads as part of the page furniture rather than floating on cream.
+          Container(
+            margin: EdgeInsets.fromLTRB(
+              AppSpacing.md,
+              isCompact ? AppSpacing.sm : AppSpacing.md,
+              AppSpacing.md,
+              0,
+            ),
+            decoration: AppDecorations.card(),
+            child: TabBar(
+              key: const Key('vehicleDetail.tabs'),
+              isScrollable: isCompact,
+              tabAlignment: isCompact ? TabAlignment.start : null,
+              // The card's own hairline border already closes the band.
+              dividerHeight: 0,
+              tabs: [
+                for (final tab in VehicleDetailTab.values)
+                  Tab(
+                    key: ValueKey('vehicleDetail.tab.${tab.queryValue}'),
+                    text: tab.label,
+                  ),
               ],
             ),
-          ),
-          TabBar(
-            key: const Key('vehicleDetail.tabs'),
-            isScrollable: isCompact,
-            tabAlignment: isCompact ? TabAlignment.start : null,
-            tabs: [
-              for (final tab in VehicleDetailTab.values)
-                Tab(
-                  key: ValueKey('vehicleDetail.tab.${tab.queryValue}'),
-                  text: tab.label,
-                ),
-            ],
           ),
           Expanded(
             child: TabBarView(
               children: [
-                _OverviewTab(vehicle: vehicle),
+                _OverviewTab(vehicle: vehicle, showActions: isCompact),
                 DocumentsTab(
                   vehicleId: vehicle.id,
                   vehicleNumber: vehicle.vehicleNumber,
@@ -145,22 +137,128 @@ class _VehicleTabs extends StatelessWidget {
   }
 }
 
-class _OverviewTab extends ConsumerWidget {
-  const _OverviewTab({required this.vehicle});
+/// The navy banner that opens the screen: the vehicle number in the serif
+/// face with a gold rule under it, the status badge, and the record actions.
+///
+/// It sits above the tab bar, so the number and the actions stay in view on
+/// every tab. Built from [AppDecorations.headerBanner] and [Brand] rather
+/// than `PageHeader`, because the title here needs a key and a badge beside
+/// it; the proportions are deliberately the same.
+class _VehicleBanner extends StatelessWidget {
+  const _VehicleBanner({required this.vehicle, required this.isCompact});
 
   final Vehicle vehicle;
 
-  Future<void> _delete(BuildContext context, WidgetRef ref) async {
-    final deleted = await confirmAndDeleteVehicle(context, ref, vehicle);
-    if (deleted && context.mounted) {
-      context.go(AppRoutes.vehicles);
-    }
-  }
+  /// A 360 px phone gets the lean banner: no icon plate, tighter padding and
+  /// no action row, so the tab below it keeps its room.
+  final bool isCompact;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final isAdmin = ref.watch(currentUserProvider)?.isAdmin ?? false;
-    final theme = Theme.of(context);
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+
+    final titleBlock = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          vehicle.vehicleNumber,
+          key: const Key('vehicleDetail.number'),
+          style: textTheme.headlineSmall?.copyWith(color: Brand.onNavy),
+        ),
+        AppDecorations.goldRule(
+          margin: EdgeInsets.only(top: isCompact ? AppSpacing.sm : 10),
+        ),
+        SizedBox(
+          height: isCompact ? AppSpacing.sm : AppSpacing.sm + AppSpacing.xs,
+        ),
+        Wrap(
+          spacing: AppSpacing.sm + AppSpacing.xs,
+          runSpacing: AppSpacing.xs,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          children: [
+            VehicleStatusBadge(status: vehicle.status),
+            if (vehicle.brandModel != null)
+              Text(
+                vehicle.brandModel!,
+                style: textTheme.titleMedium?.copyWith(
+                  color: Brand.onNavyMuted,
+                ),
+              ),
+          ],
+        ),
+      ],
+    );
+
+    return Container(
+      clipBehavior: Clip.antiAlias,
+      decoration: AppDecorations.headerBanner(),
+      child: Padding(
+        padding: EdgeInsets.fromLTRB(
+          AppSpacing.md,
+          isCompact ? AppSpacing.xs : AppSpacing.sm,
+          isCompact ? AppSpacing.md : AppSpacing.lg,
+          isCompact ? AppSpacing.md : AppSpacing.lg,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            TextButton.icon(
+              style: BannerActions.text(dense: isCompact),
+              onPressed: () => context.go(AppRoutes.vehicles),
+              icon: const Icon(Icons.arrow_back),
+              label: const Text('All vehicles'),
+            ),
+            SizedBox(height: isCompact ? AppSpacing.xs : AppSpacing.sm),
+            Padding(
+              padding: const EdgeInsets.only(left: AppSpacing.sm),
+              child: Wrap(
+                spacing: AppSpacing.lg,
+                runSpacing: isCompact ? AppSpacing.sm : AppSpacing.md,
+                alignment: WrapAlignment.spaceBetween,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  if (isCompact)
+                    titleBlock
+                  else
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconPlate(
+                          icon: Icons.directions_car,
+                          tint: Brand.navyPlate,
+                          color: AppPalette.gold,
+                          size: 44,
+                        ),
+                        const SizedBox(width: AppSpacing.md),
+                        Flexible(child: titleBlock),
+                      ],
+                    ),
+                  // A phone keeps the actions on the Overview card instead:
+                  // three buttons wrapping inside the banner would eat the
+                  // room the tab below it needs.
+                  if (!isCompact) _RecordActions(vehicle: vehicle),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _OverviewTab extends StatelessWidget {
+  const _OverviewTab({required this.vehicle, required this.showActions});
+
+  final Vehicle vehicle;
+
+  /// `true` on a phone, where the record actions live on this card rather
+  /// than on the banner.
+  final bool showActions;
+
+  @override
+  Widget build(BuildContext context) {
     final fields = <(String, String)>[
       ('Vehicle number', vehicle.vehicleNumber),
       ('Vehicle type', vehicle.vehicleType.label),
@@ -185,15 +283,22 @@ class _OverviewTab extends ConsumerWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Card(
+              DecoratedBox(
+                decoration: AppDecorations.card(),
                 child: Padding(
                   padding: const EdgeInsets.all(AppSpacing.lg),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      const SectionHeading(
+                        title: 'Vehicle record',
+                        icon: Icons.fact_check_outlined,
+                        rule: false,
+                      ),
+                      const SizedBox(height: AppSpacing.lg),
                       Wrap(
                         spacing: AppSpacing.xl,
-                        runSpacing: AppSpacing.md,
+                        runSpacing: AppSpacing.lg,
                         children: [
                           LabeledValue(
                             label: 'Status',
@@ -203,38 +308,10 @@ class _OverviewTab extends ConsumerWidget {
                             LabeledValue(label: label, value: value),
                         ],
                       ),
-                      const SizedBox(height: AppSpacing.lg),
-                      Wrap(
-                        spacing: AppSpacing.sm,
-                        runSpacing: AppSpacing.sm,
-                        children: [
-                          FilledButton.icon(
-                            key: const Key('vehicleDetail.edit'),
-                            onPressed: () =>
-                                context.go(AppRoutes.editVehicle(vehicle.id)),
-                            icon: const Icon(Icons.edit_outlined),
-                            label: const Text('Edit'),
-                          ),
-                          if (isAdmin)
-                            OutlinedButton.icon(
-                              key: const Key('vehicleDetail.changeStatus'),
-                              onPressed: () =>
-                                  changeVehicleStatus(context, ref, vehicle),
-                              icon: const Icon(Icons.swap_horiz),
-                              label: const Text('Change status'),
-                            ),
-                          if (isAdmin)
-                            OutlinedButton.icon(
-                              key: const Key('vehicleDetail.delete'),
-                              style: OutlinedButton.styleFrom(
-                                foregroundColor: theme.colorScheme.error,
-                              ),
-                              onPressed: () => _delete(context, ref),
-                              icon: const Icon(Icons.delete_outline),
-                              label: const Text('Delete'),
-                            ),
-                        ],
-                      ),
+                      if (showActions) ...[
+                        const SizedBox(height: AppSpacing.lg),
+                        _RecordActions(vehicle: vehicle, onBanner: false),
+                      ],
                     ],
                   ),
                 ),
@@ -245,6 +322,66 @@ class _OverviewTab extends ConsumerWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// Edit, Change status and Delete for this vehicle record (FR-V03, FR-V04,
+/// FR-V07).
+///
+/// The same three buttons sit on the navy banner on a tablet or a desktop and
+/// on the Overview card on a phone, so [onBanner] only swaps the palette:
+/// gold-on-navy up there, the app's own light-surface styles down here, where
+/// a red Delete is readable.
+class _RecordActions extends ConsumerWidget {
+  const _RecordActions({required this.vehicle, this.onBanner = true});
+
+  final Vehicle vehicle;
+  final bool onBanner;
+
+  Future<void> _delete(BuildContext context, WidgetRef ref) async {
+    final deleted = await confirmAndDeleteVehicle(context, ref, vehicle);
+    if (deleted && context.mounted) {
+      context.go(AppRoutes.vehicles);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isAdmin = ref.watch(currentUserProvider)?.isAdmin ?? false;
+    return Wrap(
+      spacing: AppSpacing.sm + AppSpacing.xs,
+      runSpacing: AppSpacing.sm,
+      crossAxisAlignment: WrapCrossAlignment.center,
+      children: [
+        FilledButton.icon(
+          key: const Key('vehicleDetail.edit'),
+          style: onBanner ? BannerActions.filled() : null,
+          onPressed: () => context.go(AppRoutes.editVehicle(vehicle.id)),
+          icon: const Icon(Icons.edit_outlined),
+          label: const Text('Edit'),
+        ),
+        if (isAdmin)
+          OutlinedButton.icon(
+            key: const Key('vehicleDetail.changeStatus'),
+            style: onBanner ? BannerActions.outlined() : null,
+            onPressed: () => changeVehicleStatus(context, ref, vehicle),
+            icon: const Icon(Icons.swap_horiz),
+            label: const Text('Change status'),
+          ),
+        if (isAdmin)
+          OutlinedButton.icon(
+            key: const Key('vehicleDetail.delete'),
+            style: onBanner
+                ? BannerActions.outlined()
+                : OutlinedButton.styleFrom(
+                    foregroundColor: Theme.of(context).colorScheme.error,
+                  ),
+            onPressed: () => _delete(context, ref),
+            icon: const Icon(Icons.delete_outline),
+            label: const Text('Delete'),
+          ),
+      ],
     );
   }
 }
@@ -301,63 +438,81 @@ class _CurrentDriverCard extends ConsumerWidget {
     final driver = vehicle.currentDriver;
     final canAssign = vehicle.canReceiveDriver;
 
-    return Card(
+    return Container(
       key: const Key('vehicleDetail.driverCard'),
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.lg),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Current driver', style: theme.textTheme.titleMedium),
-            const SizedBox(height: AppSpacing.sm),
-            if (driver == null)
-              Text(
-                'No driver assigned.',
-                key: const Key('vehicleDetail.noDriver'),
-                style: theme.textTheme.bodyLarge,
-              )
-            else
-              ListTile(
-                key: const Key('vehicleDetail.currentDriver'),
-                contentPadding: EdgeInsets.zero,
-                leading: const Icon(Icons.person_outline),
-                title: Text(driver.fullName),
-                subtitle: Text(Formatters.orMissing(driver.phone)),
-                onTap: () => context.go(AppRoutes.driverDetail(driver.id)),
+      clipBehavior: Clip.antiAlias,
+      decoration: AppDecorations.card(),
+      // Transparent Material so the driver row's ripple and hover land on
+      // the card surface rather than behind its white fill.
+      child: Material(
+        type: MaterialType.transparency,
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.lg),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SectionHeading(
+                title: 'Current driver',
+                icon: Icons.person_outline,
+                rule: false,
               ),
-            if (!canAssign) ...[
-              const SizedBox(height: AppSpacing.xs),
-              Text(
-                'Only active vehicles can be assigned a driver.',
-                style: theme.textTheme.bodySmall,
+              const SizedBox(height: AppSpacing.md),
+              if (driver == null)
+                Text(
+                  'No driver assigned.',
+                  key: const Key('vehicleDetail.noDriver'),
+                  style: theme.textTheme.bodyLarge,
+                )
+              else
+                ListTile(
+                  key: const Key('vehicleDetail.currentDriver'),
+                  contentPadding: EdgeInsets.zero,
+                  leading: const IconPlate(icon: Icons.person),
+                  title: Text(
+                    driver.fullName,
+                    style: theme.textTheme.titleMedium,
+                  ),
+                  subtitle: Text(Formatters.orMissing(driver.phone)),
+                  trailing: const Icon(Icons.chevron_right),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(AppDecorations.radius),
+                  ),
+                  onTap: () => context.go(AppRoutes.driverDetail(driver.id)),
+                ),
+              if (!canAssign) ...[
+                const SizedBox(height: AppSpacing.xs),
+                Text(
+                  'Only active vehicles can be assigned a driver.',
+                  style: theme.textTheme.bodySmall,
+                ),
+              ],
+              const SizedBox(height: AppSpacing.md),
+              Wrap(
+                spacing: AppSpacing.sm,
+                runSpacing: AppSpacing.sm,
+                children: [
+                  FilledButton.icon(
+                    key: const Key('vehicleDetail.assignDriver'),
+                    onPressed: canAssign ? () => _assign(context) : null,
+                    icon: const Icon(Icons.person_add_alt),
+                    label: Text(
+                      driver == null ? 'Assign driver' : 'Change driver',
+                    ),
+                  ),
+                  if (driver != null)
+                    OutlinedButton.icon(
+                      key: const Key('vehicleDetail.unassignDriver'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: theme.colorScheme.error,
+                      ),
+                      onPressed: () => _unassign(context, ref),
+                      icon: const Icon(Icons.person_remove_outlined),
+                      label: const Text('Unassign'),
+                    ),
+                ],
               ),
             ],
-            const SizedBox(height: AppSpacing.md),
-            Wrap(
-              spacing: AppSpacing.sm,
-              runSpacing: AppSpacing.sm,
-              children: [
-                FilledButton.icon(
-                  key: const Key('vehicleDetail.assignDriver'),
-                  onPressed: canAssign ? () => _assign(context) : null,
-                  icon: const Icon(Icons.person_add_alt),
-                  label: Text(
-                    driver == null ? 'Assign driver' : 'Change driver',
-                  ),
-                ),
-                if (driver != null)
-                  OutlinedButton.icon(
-                    key: const Key('vehicleDetail.unassignDriver'),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: theme.colorScheme.error,
-                    ),
-                    onPressed: () => _unassign(context, ref),
-                    icon: const Icon(Icons.person_remove_outlined),
-                    label: const Text('Unassign'),
-                  ),
-              ],
-            ),
-          ],
+          ),
         ),
       ),
     );

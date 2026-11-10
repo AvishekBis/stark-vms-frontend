@@ -3,9 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/router/app_routes.dart';
+import '../../../core/theme/app_decorations.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/utils/clock.dart';
 import '../../../core/utils/validators.dart';
+import '../../../shared/widgets/brand.dart';
 import '../../../shared/widgets/date_form_field.dart';
 import '../../../shared/widgets/feedback.dart';
 import '../../../shared/widgets/stale_version_dialog.dart';
@@ -149,8 +151,10 @@ class _DriverFormViewState extends ConsumerState<_DriverFormView> {
     final formState = ref.watch(driverFormControllerProvider);
     final controller = ref.read(driverFormControllerProvider.notifier);
     final today = ref.watch(clockProvider).now();
-    final textTheme = Theme.of(context).textTheme;
     final deactivating = widget.initial?.losesVehicleOn(_status) ?? false;
+    final isCompact =
+        ScreenSize.fromWidth(MediaQuery.sizeOf(context).width) ==
+        ScreenSize.compact;
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(AppSpacing.md),
@@ -158,143 +162,166 @@ class _DriverFormViewState extends ConsumerState<_DriverFormView> {
         alignment: Alignment.topCenter,
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: AppSpacing.formMaxWidth),
-          child: Card(
-            child: Padding(
-              padding: const EdgeInsets.all(AppSpacing.lg),
-              child: Form(
-                key: _formKey,
-                autovalidateMode: _autovalidateMode,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Text(
-                      _isEdit ? 'Edit driver' : 'Add driver',
-                      style: textTheme.headlineSmall,
-                    ),
-                    const SizedBox(height: AppSpacing.xs),
-                    Text(
-                      'Fields marked * are required.',
-                      style: textTheme.bodySmall,
-                    ),
-                    const SizedBox(height: AppSpacing.lg),
-                    TextFormField(
-                      key: const Key('driverForm.fullName'),
-                      controller: _name,
-                      autofocus: !_isEdit,
-                      textInputAction: TextInputAction.next,
-                      textCapitalization: TextCapitalization.words,
-                      decoration: InputDecoration(
-                        labelText: 'Full name *',
-                        errorText: formState.errorFor('fullName'),
-                      ),
-                      validator: DriverValidators.fullName,
-                      onChanged: (_) => controller.clearFieldError('fullName'),
-                    ),
-                    const SizedBox(height: AppSpacing.md),
-                    TextFormField(
-                      key: const Key('driverForm.phone'),
-                      controller: _phone,
-                      keyboardType: TextInputType.phone,
-                      textInputAction: TextInputAction.next,
-                      decoration: InputDecoration(
-                        labelText: 'Phone *',
-                        hintText: 'e.g. 01711-000001',
-                        helperText: 'Bangladeshi mobile number (11 digits).',
-                        errorText: formState.errorFor('phone'),
-                        errorMaxLines: 2,
-                      ),
-                      validator: DriverValidators.phone,
-                      onChanged: (_) => controller.clearFieldError('phone'),
-                    ),
-                    const SizedBox(height: AppSpacing.md),
-                    TextFormField(
-                      key: const Key('driverForm.licenseNumber'),
-                      controller: _license,
-                      textInputAction: TextInputAction.next,
-                      textCapitalization: TextCapitalization.characters,
-                      decoration: InputDecoration(
-                        labelText: 'Licence number *',
-                        hintText: 'e.g. DK0123456L00001',
-                        errorText: formState.errorFor('licenseNumber'),
-                        errorMaxLines: 2,
-                      ),
-                      validator: DriverValidators.licenseNumber,
-                      onChanged: (_) =>
-                          controller.clearFieldError('licenseNumber'),
-                    ),
-                    const SizedBox(height: AppSpacing.md),
-                    DateFormField(
-                      key: const Key('driverForm.licenseExpiry'),
-                      label: 'Licence expiry *',
-                      initialValue: _licenseExpiry,
-                      firstDate: DateTime(today.year - 30),
-                      lastDate: DateTime(today.year + 30),
-                      helperText:
-                          'A past date is allowed; it shows as Expired.',
-                      errorText: formState.errorFor('licenseExpiry'),
-                      validator: DriverValidators.licenseExpiry,
-                      onChanged: (value) {
-                        _licenseExpiry = value;
-                        controller.clearFieldError('licenseExpiry');
-                      },
-                    ),
-                    const SizedBox(height: AppSpacing.md),
-                    DropdownButtonFormField<DriverStatus>(
-                      key: const Key('driverForm.status'),
-                      initialValue: _status,
-                      decoration: InputDecoration(
-                        labelText: 'Status',
-                        errorText: formState.errorFor('status'),
-                        helperText: deactivating
-                            ? 'Saving as Inactive unassigns the driver from '
-                                  '${widget.initial!.currentVehicle!.vehicleNumber}.'
-                            : null,
-                        helperMaxLines: 2,
-                      ),
-                      items: [
-                        for (final status in DriverStatus.values)
-                          DropdownMenuItem(
-                            value: status,
-                            child: Text(status.label),
-                          ),
-                      ],
-                      onChanged: (value) {
-                        if (value != null) {
-                          setState(() => _status = value);
-                          controller.clearFieldError('status');
-                        }
-                      },
-                    ),
-                    const SizedBox(height: AppSpacing.lg),
-                    Wrap(
-                      alignment: WrapAlignment.end,
-                      spacing: AppSpacing.sm,
-                      runSpacing: AppSpacing.sm,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              PageHeader(
+                title: _isEdit ? 'Edit driver' : 'Add driver',
+                subtitle: 'Fields marked * are required.',
+                icon: Icons.badge_outlined,
+                dense: isCompact,
+              ),
+              const SizedBox(height: AppSpacing.md),
+              Container(
+                decoration: AppDecorations.card(),
+                child: Padding(
+                  padding: const EdgeInsets.all(AppSpacing.lg),
+                  child: Form(
+                    key: _formKey,
+                    autovalidateMode: _autovalidateMode,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        OutlinedButton(
-                          key: const Key('driverForm.cancel'),
-                          onPressed: formState.isSubmitting ? null : _cancel,
-                          child: const Text('Cancel'),
+                        const SectionHeading(
+                          title: 'Identity',
+                          icon: Icons.person_outline,
+                          rule: false,
                         ),
-                        FilledButton.icon(
-                          key: const Key('driverForm.save'),
-                          onPressed: formState.isSubmitting ? null : _submit,
-                          icon: formState.isSubmitting
-                              ? const SizedBox.square(
-                                  dimension: AppSpacing.md,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                  ),
-                                )
-                              : const Icon(Icons.save_outlined),
-                          label: Text(_isEdit ? 'Save changes' : 'Add driver'),
+                        const SizedBox(height: AppSpacing.md),
+                        TextFormField(
+                          key: const Key('driverForm.fullName'),
+                          controller: _name,
+                          autofocus: !_isEdit,
+                          textInputAction: TextInputAction.next,
+                          textCapitalization: TextCapitalization.words,
+                          decoration: InputDecoration(
+                            labelText: 'Full name *',
+                            errorText: formState.errorFor('fullName'),
+                          ),
+                          validator: DriverValidators.fullName,
+                          onChanged: (_) =>
+                              controller.clearFieldError('fullName'),
+                        ),
+                        const SizedBox(height: AppSpacing.md),
+                        TextFormField(
+                          key: const Key('driverForm.phone'),
+                          controller: _phone,
+                          keyboardType: TextInputType.phone,
+                          textInputAction: TextInputAction.next,
+                          decoration: InputDecoration(
+                            labelText: 'Phone *',
+                            hintText: 'e.g. 01711-000001',
+                            helperText:
+                                'Bangladeshi mobile number (11 digits).',
+                            errorText: formState.errorFor('phone'),
+                            errorMaxLines: 2,
+                          ),
+                          validator: DriverValidators.phone,
+                          onChanged: (_) => controller.clearFieldError('phone'),
+                        ),
+                        const SizedBox(height: AppSpacing.lg),
+                        const SectionHeading(
+                          title: 'Licence',
+                          icon: Icons.card_membership_outlined,
+                          rule: false,
+                        ),
+                        const SizedBox(height: AppSpacing.md),
+                        TextFormField(
+                          key: const Key('driverForm.licenseNumber'),
+                          controller: _license,
+                          textInputAction: TextInputAction.next,
+                          textCapitalization: TextCapitalization.characters,
+                          decoration: InputDecoration(
+                            labelText: 'Licence number *',
+                            hintText: 'e.g. DK0123456L00001',
+                            errorText: formState.errorFor('licenseNumber'),
+                            errorMaxLines: 2,
+                          ),
+                          validator: DriverValidators.licenseNumber,
+                          onChanged: (_) =>
+                              controller.clearFieldError('licenseNumber'),
+                        ),
+                        const SizedBox(height: AppSpacing.md),
+                        DateFormField(
+                          key: const Key('driverForm.licenseExpiry'),
+                          label: 'Licence expiry *',
+                          initialValue: _licenseExpiry,
+                          firstDate: DateTime(today.year - 30),
+                          lastDate: DateTime(today.year + 30),
+                          helperText:
+                              'A past date is allowed; it shows as Expired.',
+                          errorText: formState.errorFor('licenseExpiry'),
+                          validator: DriverValidators.licenseExpiry,
+                          onChanged: (value) {
+                            _licenseExpiry = value;
+                            controller.clearFieldError('licenseExpiry');
+                          },
+                        ),
+                        const SizedBox(height: AppSpacing.md),
+                        DropdownButtonFormField<DriverStatus>(
+                          key: const Key('driverForm.status'),
+                          initialValue: _status,
+                          decoration: InputDecoration(
+                            labelText: 'Status',
+                            errorText: formState.errorFor('status'),
+                            helperText: deactivating
+                                ? 'Saving as Inactive unassigns the driver from '
+                                      '${widget.initial!.currentVehicle!.vehicleNumber}.'
+                                : null,
+                            helperMaxLines: 2,
+                          ),
+                          items: [
+                            for (final status in DriverStatus.values)
+                              DropdownMenuItem(
+                                value: status,
+                                child: Text(status.label),
+                              ),
+                          ],
+                          onChanged: (value) {
+                            if (value != null) {
+                              setState(() => _status = value);
+                              controller.clearFieldError('status');
+                            }
+                          },
+                        ),
+                        const SizedBox(height: AppSpacing.lg),
+                        Wrap(
+                          alignment: WrapAlignment.end,
+                          spacing: AppSpacing.sm,
+                          runSpacing: AppSpacing.sm,
+                          children: [
+                            OutlinedButton(
+                              key: const Key('driverForm.cancel'),
+                              onPressed: formState.isSubmitting
+                                  ? null
+                                  : _cancel,
+                              child: const Text('Cancel'),
+                            ),
+                            FilledButton.icon(
+                              key: const Key('driverForm.save'),
+                              onPressed: formState.isSubmitting
+                                  ? null
+                                  : _submit,
+                              icon: formState.isSubmitting
+                                  ? const SizedBox.square(
+                                      dimension: AppSpacing.md,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                      ),
+                                    )
+                                  : const Icon(Icons.save_outlined),
+                              label: Text(
+                                _isEdit ? 'Save changes' : 'Add driver',
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
-                  ],
+                  ),
                 ),
               ),
-            ),
+            ],
           ),
         ),
       ),

@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/theme/app_decorations.dart';
 import '../../../core/theme/app_spacing.dart';
+import '../../../core/theme/status_colors.dart';
 import '../../../core/utils/formatters.dart';
+import '../../../shared/models/expiry_status.dart';
+import '../../../shared/widgets/brand.dart';
 import '../../../shared/widgets/data_table_frame.dart';
 import '../../../shared/widgets/confirm_dialog.dart';
 import '../../../shared/widgets/expiry_badge.dart';
@@ -12,6 +16,14 @@ import '../../auth/presentation/auth_controller.dart';
 import '../data/vehicle_document.dart';
 import 'document_providers.dart';
 import 'upload_document_dialog.dart';
+
+/// A second, non-colour signal for the expiry tone: the glyph on the leading
+/// plate changes with the status, and the badge still spells it out.
+IconData documentStatusIcon(ExpiryStatus status) => switch (status) {
+  ExpiryStatus.valid => Icons.verified_outlined,
+  ExpiryStatus.expiringSoon => Icons.schedule,
+  ExpiryStatus.expired => Icons.event_busy,
+};
 
 /// Documents of one vehicle (FR-D01, FR-D02): soonest expiry first, with
 /// expiry badges, View / Download, Delete (ADMIN) and Upload.
@@ -64,13 +76,33 @@ class DocumentsTab extends ConsumerWidget {
             spacing: AppSpacing.md,
             runSpacing: AppSpacing.sm,
             children: [
-              Text(
-                documents.hasValue
-                    ? '${documents.requireValue.length} '
-                          '${documents.requireValue.length == 1 ? 'document' : 'documents'}'
-                    : 'Documents',
-                key: const Key('documents.count'),
-                style: Theme.of(context).textTheme.titleMedium,
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const IconPlate(icon: Icons.folder_copy_outlined, size: 34),
+                  const SizedBox(width: AppSpacing.sm + AppSpacing.xs),
+                  Flexible(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // The count is the figure of this tab: serif, in navy.
+                        Text(
+                          documents.hasValue
+                              ? '${documents.requireValue.length} '
+                                    '${documents.requireValue.length == 1 ? 'document' : 'documents'}'
+                              : 'Documents',
+                          key: const Key('documents.count'),
+                          style: Theme.of(context).textTheme.titleLarge,
+                        ),
+                        AppDecorations.goldRule(
+                          width: AppSpacing.xl,
+                          margin: const EdgeInsets.only(top: AppSpacing.xs),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
               uploadButton,
             ],
@@ -140,11 +172,17 @@ class _DocumentTable extends StatelessWidget {
           const DataColumn(label: Text('Actions')),
         ],
         rows: [
-          for (final document in documents)
+          for (final (index, document) in documents.indexed)
             DataRow(
               key: ValueKey('document.row.${document.id}'),
+              color: DataTableFrame.zebraRow(index),
               cells: [
-                DataCell(Text(document.documentType.label)),
+                DataCell(
+                  DocumentTypeCell(
+                    status: document.expiryStatus,
+                    label: document.documentType.label,
+                  ),
+                ),
                 DataCell(Text(Formatters.orMissing(document.documentNumber))),
                 if (isFull) DataCell(Text(Formatters.date(document.issueDate))),
                 DataCell(Text(Formatters.date(document.expiryDate))),
@@ -185,6 +223,37 @@ class _DocumentTable extends StatelessWidget {
   }
 }
 
+/// The document type in a table row, led by a plate whose glyph and tint
+/// follow the expiry tone. The status column still carries the badge text.
+class DocumentTypeCell extends StatelessWidget {
+  const DocumentTypeCell({
+    super.key,
+    required this.status,
+    required this.label,
+  });
+
+  final ExpiryStatus status;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final tone = StatusColors.of(context).background(status.tone);
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        IconPlate(
+          icon: documentStatusIcon(status),
+          tint: tone.withValues(alpha: 0.14),
+          color: tone,
+          size: 28,
+        ),
+        const SizedBox(width: AppSpacing.sm),
+        Text(label),
+      ],
+    );
+  }
+}
+
 class _DocumentCard extends StatelessWidget {
   const _DocumentCard({required this.document, required this.isAdmin});
 
@@ -194,43 +263,66 @@ class _DocumentCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
+    final tone = StatusColors.of(context)
+        .background(document.expiryStatus.tone);
     final details = [
       if (document.documentNumber != null) document.documentNumber!,
       'expires ${Formatters.date(document.expiryDate)}',
       Formatters.fileSize(document.fileSize),
     ].join(' · ');
-    return Card(
+    return AccentEdgeCard(
       key: ValueKey('document.card.${document.id}'),
+      accent: tone,
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.md),
-        child: Column(
+        child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(document.documentType.label, style: textTheme.titleMedium),
-            const SizedBox(height: AppSpacing.xs),
-            Text(details, style: textTheme.bodySmall),
-            Text(
-              Formatters.audit(
-                'Uploaded',
-                at: document.createdAt,
-                by: document.createdBy,
-              ),
-              key: ValueKey('document.audit.${document.id}'),
-              style: textTheme.bodySmall,
+            IconPlate(
+              icon: documentStatusIcon(document.expiryStatus),
+              tint: tone.withValues(alpha: 0.14),
+              color: tone,
+              size: 38,
             ),
-            const SizedBox(height: AppSpacing.sm),
-            Wrap(
-              alignment: WrapAlignment.spaceBetween,
-              crossAxisAlignment: WrapCrossAlignment.center,
-              spacing: AppSpacing.sm,
-              runSpacing: AppSpacing.xs,
-              children: [
-                ExpiryBadge(
-                  status: document.expiryStatus,
-                  daysUntilExpiry: document.daysUntilExpiry,
-                ),
-                DocumentActionButtons(document: document, isAdmin: isAdmin),
-              ],
+            const SizedBox(width: AppSpacing.md),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    document.documentType.label,
+                    style: textTheme.titleMedium,
+                  ),
+                  const SizedBox(height: AppSpacing.xs),
+                  Text(details, style: textTheme.bodySmall),
+                  Text(
+                    Formatters.audit(
+                      'Uploaded',
+                      at: document.createdAt,
+                      by: document.createdBy,
+                    ),
+                    key: ValueKey('document.audit.${document.id}'),
+                    style: textTheme.bodySmall,
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                  Wrap(
+                    alignment: WrapAlignment.spaceBetween,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    spacing: AppSpacing.sm,
+                    runSpacing: AppSpacing.xs,
+                    children: [
+                      ExpiryBadge(
+                        status: document.expiryStatus,
+                        daysUntilExpiry: document.daysUntilExpiry,
+                      ),
+                      DocumentActionButtons(
+                        document: document,
+                        isAdmin: isAdmin,
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ],
         ),

@@ -5,9 +5,12 @@ import 'package:go_router/go_router.dart';
 import '../../../core/config/app_config.dart';
 import '../../../core/network/page_response.dart';
 import '../../../core/router/app_routes.dart';
+import '../../../core/theme/app_palette.dart';
 import '../../../core/theme/app_spacing.dart';
+import '../../../core/theme/status_colors.dart';
 import '../../../core/utils/debouncer.dart';
 import '../../../core/utils/formatters.dart';
+import '../../../shared/widgets/brand.dart';
 import '../../../shared/widgets/data_table_frame.dart';
 import '../../../shared/widgets/filter_menu.dart';
 import '../../../shared/widgets/pagination_bar.dart';
@@ -19,6 +22,7 @@ import '../data/vehicle.dart';
 import '../data/vehicle_enums.dart';
 import '../data/vehicle_query.dart';
 import 'vehicle_providers.dart';
+import '../../../shared/widgets/banner_actions.dart';
 import 'widgets/delete_vehicle_flow.dart';
 import 'widgets/vehicle_status_badge.dart';
 
@@ -131,32 +135,58 @@ class _VehicleListScreenState extends ConsumerState<VehicleListScreen> {
               label: const Text('Register vehicle'),
             )
           : null,
-      body: Padding(
-        padding: const EdgeInsets.fromLTRB(
-          AppSpacing.md,
-          AppSpacing.md,
-          AppSpacing.md,
-          0,
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            _ListHeader(
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.md,
+              AppSpacing.md,
+              AppSpacing.md,
+              0,
+            ),
+            child: PageHeader(
+              title: 'Vehicles',
+              // As on Drivers and Users: the subtitle goes on a phone, where
+              // it would wrap and push the first card off the screen.
+              subtitle: isCompact ? null : 'The Stark Group fleet register',
+              dense: isCompact,
+              icon: Icons.directions_car,
+              actions: [
+                // On a phone the same action is the floating button instead.
+                if (!isCompact)
+                  FilledButton.icon(
+                    key: const Key('vehicles.register'),
+                    style: BannerActions.filled(),
+                    onPressed: () => context.go(AppRoutes.newVehicle),
+                    icon: const Icon(Icons.add),
+                    label: const Text('Register vehicle'),
+                  ),
+              ],
+            ),
+          ),
+          SizedBox(height: isCompact ? AppSpacing.sm : AppSpacing.md),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+            child: _ListToolbar(
               searchController: _searchController,
               onSearchChanged: _onSearchChanged,
               onSearchSubmitted: _onSearchSubmitted,
               onClearSearch: _clearSearch,
               query: query,
-              showRegisterButton: !isCompact,
+              isCompact: isCompact,
             ),
-            const SizedBox(height: AppSpacing.sm),
-            SizedBox(
-              height: AppSpacing.xs,
-              child: listValue.isLoading && listValue.hasValue
-                  ? const LinearProgressIndicator()
-                  : null,
-            ),
-            Expanded(
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          SizedBox(
+            height: AppSpacing.xs,
+            child: listValue.isLoading && listValue.hasValue
+                ? const LinearProgressIndicator()
+                : null,
+          ),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
               child: AsyncValueView<PageResponse<Vehicle>>(
                 value: listValue,
                 onRetry: () => ref.invalidate(vehicleListProvider),
@@ -178,21 +208,26 @@ class _VehicleListScreenState extends ConsumerState<VehicleListScreen> {
                 ),
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 }
 
-class _ListHeader extends ConsumerWidget {
-  const _ListHeader({
+/// Search, filters and sort on one tidy card under the page banner, so the
+/// controls read as a single instrument panel instead of loose chips.
+///
+/// The surface itself is the shared [ListToolbar], so Vehicles, Drivers and
+/// Users all drop the card on a phone, where the room belongs to the rows.
+class _ListToolbar extends ConsumerWidget {
+  const _ListToolbar({
     required this.searchController,
     required this.onSearchChanged,
     required this.onSearchSubmitted,
     required this.onClearSearch,
     required this.query,
-    required this.showRegisterButton,
+    required this.isCompact,
   });
 
   final TextEditingController searchController;
@@ -200,7 +235,7 @@ class _ListHeader extends ConsumerWidget {
   final ValueChanged<String> onSearchSubmitted;
   final VoidCallback onClearSearch;
   final VehicleQuery query;
-  final bool showRegisterButton;
+  final bool isCompact;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -227,59 +262,46 @@ class _ListHeader extends ConsumerWidget {
       ),
     );
 
-    return Wrap(
-      spacing: AppSpacing.md,
-      runSpacing: AppSpacing.sm,
-      crossAxisAlignment: WrapCrossAlignment.center,
-      alignment: WrapAlignment.spaceBetween,
-      children: [
-        Text('Vehicles', style: Theme.of(context).textTheme.headlineSmall),
-        Wrap(
-          spacing: AppSpacing.sm,
-          runSpacing: AppSpacing.sm,
-          crossAxisAlignment: WrapCrossAlignment.center,
-          children: [
-            ConstrainedBox(
-              constraints: const BoxConstraints(
-                minWidth: AppSpacing.searchMinWidth,
-                maxWidth: AppSpacing.searchMaxWidth,
-              ),
-              child: searchField,
+    return ListToolbar(
+      isCompact: isCompact,
+      child: Wrap(
+        spacing: AppSpacing.sm + AppSpacing.xs,
+        runSpacing: AppSpacing.sm + AppSpacing.xs,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        children: [
+          ConstrainedBox(
+            constraints: const BoxConstraints(
+              minWidth: AppSpacing.searchMinWidth,
+              maxWidth: AppSpacing.searchMaxWidth,
             ),
-            FilterMenu<VehicleStatus>(
-              key: const Key('vehicles.statusFilter'),
-              label: 'Status',
-              options: VehicleStatus.values,
-              optionLabel: (status) => status.label,
-              selected: query.status,
-              onChanged: ref.read(vehicleQueryProvider.notifier).setStatus,
-            ),
-            FilterMenu<VehicleType>(
-              key: const Key('vehicles.typeFilter'),
-              label: 'Type',
-              options: VehicleType.values,
-              optionLabel: (type) => type.label,
-              selected: query.type,
-              onChanged: ref.read(vehicleQueryProvider.notifier).setType,
-            ),
-            SortMenu<VehicleSortField>(
-              key: const Key('vehicles.sortMenu'),
-              values: VehicleSortField.values,
-              label: (field) => field.label,
-              field: query.sortField,
-              direction: query.sortDirection,
-              onSelected: ref.read(vehicleQueryProvider.notifier).setSort,
-            ),
-            if (showRegisterButton)
-              FilledButton.icon(
-                key: const Key('vehicles.register'),
-                onPressed: () => context.go(AppRoutes.newVehicle),
-                icon: const Icon(Icons.add),
-                label: const Text('Register vehicle'),
-              ),
-          ],
-        ),
-      ],
+            child: searchField,
+          ),
+          FilterMenu<VehicleStatus>(
+            key: const Key('vehicles.statusFilter'),
+            label: 'Status',
+            options: VehicleStatus.values,
+            optionLabel: (status) => status.label,
+            selected: query.status,
+            onChanged: ref.read(vehicleQueryProvider.notifier).setStatus,
+          ),
+          FilterMenu<VehicleType>(
+            key: const Key('vehicles.typeFilter'),
+            label: 'Type',
+            options: VehicleType.values,
+            optionLabel: (type) => type.label,
+            selected: query.type,
+            onChanged: ref.read(vehicleQueryProvider.notifier).setType,
+          ),
+          SortMenu<VehicleSortField>(
+            key: const Key('vehicles.sortMenu'),
+            values: VehicleSortField.values,
+            label: (field) => field.label,
+            field: query.sortField,
+            direction: query.sortDirection,
+            onSelected: ref.read(vehicleQueryProvider.notifier).setSort,
+          ),
+        ],
+      ),
     );
   }
 }
@@ -451,6 +473,7 @@ class _VehicleTable extends StatelessWidget {
     final sortIndex = columns.indexWhere(
       (column) => column.sortField == query.sortField,
     );
+    final textTheme = Theme.of(context).textTheme;
 
     return DataTableFrame(
       table: DataTable(
@@ -470,12 +493,20 @@ class _VehicleTable extends StatelessWidget {
             ),
         ],
         rows: [
-          for (final vehicle in vehicles)
+          for (final (index, vehicle) in vehicles.indexed)
             DataRow(
               key: ValueKey('vehicle.row.${vehicle.id}'),
+              color: DataTableFrame.zebraRow(index),
               onSelectChanged: (_) => onOpen(vehicle),
               cells: [
-                DataCell(Text(vehicle.vehicleNumber)),
+                DataCell(
+                  Text(
+                    vehicle.vehicleNumber,
+                    style: textTheme.titleSmall?.copyWith(
+                      color: AppPalette.navy,
+                    ),
+                  ),
+                ),
                 DataCell(Text(vehicle.vehicleType.label)),
                 DataCell(Text(Formatters.orMissing(vehicle.brandModel))),
                 DataCell(Text(Formatters.orMissing(vehicle.manufactureYear))),
@@ -529,9 +560,10 @@ class _VehicleCards extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
+    final statusColors = StatusColors.of(context);
     return ListView.separated(
       itemCount: vehicles.length,
-      separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.sm),
+      separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.sm + 2),
       itemBuilder: (context, index) {
         final vehicle = vehicles[index];
         final details = [
@@ -540,51 +572,58 @@ class _VehicleCards extends StatelessWidget {
           vehicle.manufactureYear?.toString(),
           vehicle.fuelType?.label,
         ].whereType<String>().join(' · ');
-        return Card(
+        // The leading edge and the icon plate pick up the status tone; the
+        // badge below still spells the status out, so colour never carries it.
+        final tone = statusColors.background(
+          VehicleStatusBadge.toneFor(vehicle.status),
+        );
+        return AccentEdgeCard(
           key: ValueKey('vehicle.card.${vehicle.id}'),
-          child: InkWell(
-            onTap: () => onOpen(vehicle),
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(
-                AppSpacing.md,
-                AppSpacing.sm,
-                0,
-                AppSpacing.sm,
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          vehicle.vehicleNumber,
-                          style: textTheme.titleMedium,
-                        ),
-                        const SizedBox(height: AppSpacing.xs),
-                        Text(details, style: textTheme.bodySmall),
-                        const SizedBox(height: AppSpacing.xs),
-                        Text(
-                          vehicle.currentDriver == null
-                              ? 'No driver assigned'
-                              : 'Driver: ${vehicle.currentDriver!.fullName}',
-                          key: ValueKey('vehicle.card.driver.${vehicle.id}'),
-                          style: textTheme.bodySmall,
-                        ),
-                        const SizedBox(height: AppSpacing.sm),
-                        VehicleStatusBadge(status: vehicle.status),
-                      ],
-                    ),
+          accent: tone,
+          onTap: () => onOpen(vehicle),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.md,
+              AppSpacing.md,
+              0,
+              AppSpacing.md,
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                IconPlate(
+                  icon: Icons.directions_car,
+                  tint: tone.withValues(alpha: 0.14),
+                ),
+                const SizedBox(width: AppSpacing.sm + AppSpacing.xs),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(vehicle.vehicleNumber, style: textTheme.titleMedium),
+                      const SizedBox(height: AppSpacing.xs),
+                      Text(details, style: textTheme.bodySmall),
+                      const SizedBox(height: AppSpacing.xs),
+                      Text(
+                        vehicle.currentDriver == null
+                            ? 'No driver assigned'
+                            : 'Driver: ${vehicle.currentDriver!.fullName}',
+                        key: ValueKey('vehicle.card.driver.${vehicle.id}'),
+                        style: textTheme.bodySmall,
+                      ),
+                      const SizedBox(height: AppSpacing.sm),
+                      VehicleStatusBadge(status: vehicle.status),
+                    ],
                   ),
-                  RowActions(
-                    keyPrefix: 'vehicle',
-                    id: vehicle.id,
-                    isAdmin: isAdmin,
-                    onEdit: () => onEdit(vehicle),
-                    onDelete: () => onDelete(vehicle),
-                  ),
-                ],
-              ),
+                ),
+                RowActions(
+                  keyPrefix: 'vehicle',
+                  id: vehicle.id,
+                  isAdmin: isAdmin,
+                  onEdit: () => onEdit(vehicle),
+                  onDelete: () => onDelete(vehicle),
+                ),
+              ],
             ),
           ),
         );

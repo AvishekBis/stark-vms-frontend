@@ -5,9 +5,13 @@ import 'package:go_router/go_router.dart';
 import '../../../core/config/app_config.dart';
 import '../../../core/network/page_response.dart';
 import '../../../core/router/app_routes.dart';
+import '../../../core/theme/app_palette.dart';
 import '../../../core/theme/app_spacing.dart';
+import '../../../core/theme/status_colors.dart';
 import '../../../core/utils/debouncer.dart';
 import '../../../core/utils/formatters.dart';
+import '../../../shared/widgets/banner_actions.dart';
+import '../../../shared/widgets/brand.dart';
 import '../../../shared/widgets/data_table_frame.dart';
 import '../../../shared/widgets/filter_menu.dart';
 import '../../../shared/widgets/pagination_bar.dart';
@@ -94,84 +98,94 @@ class _UsersListScreenState extends ConsumerState<UsersListScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Wrap(
-              spacing: AppSpacing.md,
-              runSpacing: AppSpacing.sm,
-              crossAxisAlignment: WrapCrossAlignment.center,
-              alignment: WrapAlignment.spaceBetween,
-              children: [
-                Text('Users', style: Theme.of(context).textTheme.headlineSmall),
-                Wrap(
-                  spacing: AppSpacing.sm,
-                  runSpacing: AppSpacing.sm,
-                  crossAxisAlignment: WrapCrossAlignment.center,
-                  children: [
-                    ConstrainedBox(
-                      constraints: const BoxConstraints(
-                        minWidth: AppSpacing.searchMinWidth,
-                        maxWidth: AppSpacing.searchMaxWidth,
-                      ),
-                      child: TextField(
-                        key: const Key('users.search'),
-                        controller: _searchController,
-                        onChanged: _onSearchChanged,
-                        onSubmitted: _onSearchSubmitted,
-                        textInputAction: TextInputAction.search,
-                        decoration: InputDecoration(
-                          hintText: 'Search e-mail or name',
-                          prefixIcon: const Icon(Icons.search),
-                          isDense: true,
-                          suffixIcon: ValueListenableBuilder<TextEditingValue>(
-                            valueListenable: _searchController,
-                            builder: (context, value, _) => value.text.isEmpty
-                                ? const SizedBox.shrink()
-                                : IconButton(
-                                    tooltip: 'Clear search',
-                                    onPressed: () {
-                                      _searchDebouncer.cancel();
-                                      _searchController.clear();
-                                      queryController.setSearch('');
-                                    },
-                                    icon: const Icon(Icons.clear),
-                                  ),
-                          ),
+            PageHeader(
+              title: 'Users',
+              // Dropped on a phone, where it would wrap to four lines and
+              // push the first row off the screen.
+              subtitle: isCompact
+                  ? null
+                  : 'Accounts that may sign in, and what each one may do.',
+              dense: isCompact,
+              icon: Icons.manage_accounts_outlined,
+              actions: [
+                if (!isCompact)
+                  FilledButton.icon(
+                    key: const Key('users.add'),
+                    style: BannerActions.filled(),
+                    onPressed: () => context.go(AppRoutes.newUser),
+                    icon: const Icon(Icons.person_add_alt_1),
+                    label: const Text('Add user'),
+                  ),
+              ],
+            ),
+            SizedBox(height: isCompact ? AppSpacing.sm : AppSpacing.md),
+            // The same toolbar as Drivers: a card on a tablet or desktop,
+            // bare on a phone, where the room belongs to the rows.
+            ListToolbar(
+              isCompact: isCompact,
+              child: Wrap(
+                spacing: AppSpacing.sm,
+                runSpacing: AppSpacing.sm,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  ConstrainedBox(
+                    constraints: const BoxConstraints(
+                      minWidth: AppSpacing.searchMinWidth,
+                      maxWidth: AppSpacing.searchMaxWidth,
+                    ),
+                    child: TextField(
+                      key: const Key('users.search'),
+                      controller: _searchController,
+                      onChanged: _onSearchChanged,
+                      onSubmitted: _onSearchSubmitted,
+                      textInputAction: TextInputAction.search,
+                      decoration: InputDecoration(
+                        hintText: 'Search e-mail or name',
+                        prefixIcon: const Icon(Icons.search),
+                        isDense: true,
+                        suffixIcon: ValueListenableBuilder<TextEditingValue>(
+                          valueListenable: _searchController,
+                          builder: (context, value, _) => value.text.isEmpty
+                              ? const SizedBox.shrink()
+                              : IconButton(
+                                  tooltip: 'Clear search',
+                                  onPressed: () {
+                                    _searchDebouncer.cancel();
+                                    _searchController.clear();
+                                    queryController.setSearch('');
+                                  },
+                                  icon: const Icon(Icons.clear),
+                                ),
                         ),
                       ),
                     ),
-                    FilterMenu<UserRole>(
-                      key: const Key('users.roleFilter'),
-                      label: 'Role',
-                      options: UserRole.values,
-                      optionLabel: (role) => role.label,
-                      selected: query.role,
-                      onChanged: queryController.setRole,
-                    ),
-                    FilterMenu<bool>(
-                      key: const Key('users.enabledFilter'),
-                      label: 'Status',
-                      options: const [true, false],
-                      optionLabel: UserEnabledBadge.labelFor,
-                      selected: query.enabled,
-                      onChanged: queryController.setEnabled,
-                    ),
-                    SortMenu<UserSortField>(
-                      key: const Key('users.sortMenu'),
-                      values: UserSortField.values,
-                      label: (field) => field.label,
-                      field: query.sortField,
-                      direction: query.sortDirection,
-                      onSelected: queryController.setSort,
-                    ),
-                    if (!isCompact)
-                      FilledButton.icon(
-                        key: const Key('users.add'),
-                        onPressed: () => context.go(AppRoutes.newUser),
-                        icon: const Icon(Icons.person_add_alt_1),
-                        label: const Text('Add user'),
-                      ),
-                  ],
-                ),
-              ],
+                  ),
+                  FilterMenu<UserRole>(
+                    key: const Key('users.roleFilter'),
+                    label: 'Role',
+                    options: UserRole.values,
+                    optionLabel: (role) => role.label,
+                    selected: query.role,
+                    onChanged: queryController.setRole,
+                  ),
+                  FilterMenu<bool>(
+                    key: const Key('users.enabledFilter'),
+                    label: 'Status',
+                    options: const [true, false],
+                    optionLabel: UserEnabledBadge.labelFor,
+                    selected: query.enabled,
+                    onChanged: queryController.setEnabled,
+                  ),
+                  SortMenu<UserSortField>(
+                    key: const Key('users.sortMenu'),
+                    values: UserSortField.values,
+                    label: (field) => field.label,
+                    field: query.sortField,
+                    direction: query.sortDirection,
+                    onSelected: queryController.setSort,
+                  ),
+                ],
+              ),
             ),
             const SizedBox(height: AppSpacing.sm),
             SizedBox(
@@ -314,6 +328,9 @@ class _UserTable extends StatelessWidget {
       table: DataTable(
         key: const Key('users.table'),
         showCheckboxColumn: false,
+        // Tighter than the theme's spacing: the avatar in the name
+        // cell needs the room, and the row still fits on one screen.
+        columnSpacing: AppSpacing.md,
         sortColumnIndex: sortIndex < 0 ? null : sortIndex,
         sortAscending: query.sortDirection == SortDirection.ascending,
         columns: [
@@ -324,20 +341,27 @@ class _UserTable extends StatelessWidget {
             ),
         ],
         rows: [
-          for (final user in users)
+          for (final (index, user) in users.indexed)
             DataRow(
               key: ValueKey('user.row.${user.id}'),
+              color: DataTableFrame.zebraRow(index),
               onSelectChanged: (_) => context.go(AppRoutes.editUser(user.id)),
               cells: [
                 DataCell(
-                  Text(
-                    user.id == currentUserId
-                        ? '${user.displayName} (you)'
-                        : user.displayName,
+                  Row(
+                    children: [
+                      InitialsAvatar(name: user.displayName, size: 30),
+                      const SizedBox(width: AppSpacing.sm + AppSpacing.xs),
+                      Text(
+                        user.id == currentUserId
+                            ? '${user.displayName} (you)'
+                            : user.displayName,
+                      ),
+                    ],
                   ),
                 ),
                 DataCell(Text(user.email)),
-                DataCell(Text(user.role.label)),
+                DataCell(UserRoleChip(role: user.role)),
                 DataCell(UserEnabledBadge(enabled: user.enabled)),
                 if (isFull) DataCell(Text(Formatters.date(user.createdAt))),
                 if (isFull) DataCell(Text(user.createdBy ?? 'system')),
@@ -361,40 +385,66 @@ class _UserCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
-    return Card(
+    // The leading edge carries the account's own tone; the badge under the
+    // name still says "Enabled" or "Disabled" in words.
+    final tone = StatusColors.of(context)
+        .background(UserEnabledBadge.toneFor(user.enabled));
+
+    return AccentEdgeCard(
       key: ValueKey('user.card.${user.id}'),
-      child: InkWell(
-        onTap: () => context.go(AppRoutes.editUser(user.id)),
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(
-            AppSpacing.md,
-            AppSpacing.sm,
-            0,
-            AppSpacing.sm,
-          ),
-          child: Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      isSelf ? '${user.displayName} (you)' : user.displayName,
-                      style: textTheme.titleMedium,
-                    ),
-                    const SizedBox(height: AppSpacing.xs),
-                    Text(
-                      '${user.email} · ${user.role.label}',
-                      style: textTheme.bodySmall,
-                    ),
-                    const SizedBox(height: AppSpacing.sm),
-                    UserEnabledBadge(enabled: user.enabled),
-                  ],
-                ),
+      accent: tone,
+      onTap: () => context.go(AppRoutes.editUser(user.id)),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(
+          AppSpacing.md,
+          AppSpacing.sm + AppSpacing.xs,
+          AppSpacing.xs,
+          AppSpacing.sm + AppSpacing.xs,
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            InitialsAvatar(
+              name: user.displayName,
+              tint: tone.withValues(alpha: 0.14),
+            ),
+            const SizedBox(width: AppSpacing.md),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // A summary, one line each; the form spells it all out.
+                  Text(
+                    isSelf ? '${user.displayName} (you)' : user.displayName,
+                    style: textTheme.titleMedium,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: AppSpacing.xs),
+                  Text(
+                    '${user.email} · ${user.role.label}',
+                    style: textTheme.bodySmall,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                  // The actions sit under the badge rather than beside the
+                  // name, so a long name keeps the width of the card.
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Align(
+                          alignment: Alignment.centerLeft,
+                          child: UserEnabledBadge(enabled: user.enabled),
+                        ),
+                      ),
+                      _UserActions(user: user, isSelf: isSelf),
+                    ],
+                  ),
+                ],
               ),
-              _UserActions(user: user, isSelf: isSelf),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -417,6 +467,7 @@ class _UserActions extends StatelessWidget {
         IconButton(
           key: ValueKey('user.edit.${user.id}'),
           tooltip: 'Edit',
+          color: AppPalette.navy,
           onPressed: () => context.go(AppRoutes.editUser(user.id)),
           icon: const Icon(Icons.edit_outlined),
         ),
@@ -424,6 +475,7 @@ class _UserActions extends StatelessWidget {
           IconButton(
             key: ValueKey('user.resetPassword.${user.id}'),
             tooltip: 'Reset password',
+            color: AppPalette.navy,
             onPressed: () => showResetPasswordDialog(context, user: user),
             icon: const Icon(Icons.lock_reset),
           ),

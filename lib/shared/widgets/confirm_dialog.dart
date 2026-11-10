@@ -1,6 +1,14 @@
 import 'package:flutter/material.dart';
 
+import '../../core/theme/app_palette.dart';
+import '../../core/theme/status_colors.dart';
+import 'brand.dart';
+
 /// Confirmation dialog for destructive actions (guideline 14.2).
+///
+/// The icon plate carries the tone — danger when [destructive], gold
+/// otherwise — while the title and the button label still say what will
+/// happen, so colour is never the only signal.
 class ConfirmDialog extends StatelessWidget {
   const ConfirmDialog({
     super.key,
@@ -39,10 +47,22 @@ class ConfirmDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final danger = StatusColors.of(context).danger;
     return AlertDialog(
+      icon: destructive
+          ? IconPlate(
+              icon: Icons.delete_outline,
+              tint: danger.withValues(alpha: 0.12),
+              color: danger,
+              size: 48,
+            )
+          : const IconPlate(icon: Icons.help_outline, size: 48),
       title: Text(title),
-      content: Text(message),
+      content: Text(
+        message,
+        style: theme.textTheme.bodyMedium?.copyWith(color: AppPalette.inkMuted),
+      ),
       actions: [
         TextButton(
           key: const Key('confirm.cancel'),
@@ -53,8 +73,8 @@ class ConfirmDialog extends StatelessWidget {
           key: const Key('confirm.ok'),
           style: destructive
               ? FilledButton.styleFrom(
-                  backgroundColor: colorScheme.error,
-                  foregroundColor: colorScheme.onError,
+                  backgroundColor: danger,
+                  foregroundColor: theme.colorScheme.onError,
                 )
               : null,
           onPressed: () => Navigator.of(context).pop(true),

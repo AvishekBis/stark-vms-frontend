@@ -1,12 +1,17 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/router/app_routes.dart';
+import '../../core/theme/app_decorations.dart';
+import '../../core/theme/app_palette.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../features/auth/data/auth_models.dart';
 import '../../features/auth/presentation/auth_controller.dart';
 import '../../features/auth/presentation/change_password_dialog.dart';
+import 'brand.dart';
 import 'connecting_banner.dart';
 
 /// One entry of the main navigation.
@@ -77,16 +82,28 @@ class AppShell extends ConsumerWidget {
     final selectedIndex = _selectedIndex(destinations);
     final isWide =
         MediaQuery.sizeOf(context).width >= ScreenSize.mediumMinWidth;
-    final content = Column(
-      children: [
-        const ConnectingBanner(),
-        Expanded(child: child),
-      ],
+    final content = DecoratedBox(
+      decoration: const BoxDecoration(gradient: AppDecorations.pageGradient),
+      child: Column(
+        children: [
+          const ConnectingBanner(),
+          Expanded(child: child),
+        ],
+      ),
     );
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Stark Group VMS'),
+        // The navy gradient of the brand, with the gold hairline under it.
+        flexibleSpace: const DecoratedBox(
+          decoration: BoxDecoration(
+            gradient: AppDecorations.headerGradient,
+            border: Border(
+              bottom: BorderSide(color: AppPalette.gold, width: 2),
+            ),
+          ),
+        ),
         actions: [
           if (user != null)
             _UserMenu(
@@ -111,6 +128,14 @@ class AppShell extends ConsumerWidget {
                 NavigationRail(
                   selectedIndex: selectedIndex,
                   labelType: NavigationRailLabelType.all,
+                  groupAlignment: -0.85,
+                  leading: const Padding(
+                    padding: EdgeInsets.only(
+                      top: AppSpacing.md,
+                      bottom: AppSpacing.sm,
+                    ),
+                    child: _RailMark(),
+                  ),
                   onDestinationSelected: (index) =>
                       context.go(destinations[index].path),
                   destinations: [
@@ -131,10 +156,39 @@ class AppShell extends ConsumerWidget {
   }
 }
 
+/// A small gold diamond at the top of the rail: the brand mark, no text, so
+/// it never repeats the title in the top bar.
+class _RailMark extends StatelessWidget {
+  const _RailMark();
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Transform.rotate(
+          angle: math.pi / 4,
+          child: Container(
+            width: AppSpacing.md,
+            height: AppSpacing.md,
+            decoration: BoxDecoration(
+              border: Border.all(color: AppPalette.gold, width: 2),
+              borderRadius: BorderRadius.circular(AppSpacing.xs / 2),
+            ),
+          ),
+        ),
+        AppDecorations.goldRule(
+          width: AppSpacing.lg,
+          margin: const EdgeInsets.only(top: AppSpacing.md),
+        ),
+      ],
+    );
+  }
+}
+
 enum _UserMenuAction { changePassword, logout }
 
-/// Name and role chip; opens the user menu (every role): Change password
-/// (v2.1, contract 7.3.4) and Log out.
+/// Initials plate, name and role chip; opens the user menu (every role):
+/// Change password (v2.1, contract 7.3.4) and Log out.
 class _UserMenu extends StatelessWidget {
   const _UserMenu({
     required this.user,
@@ -147,6 +201,17 @@ class _UserMenu extends StatelessWidget {
   final bool showName;
   final VoidCallback onChangePassword;
   final VoidCallback onLogout;
+
+  /// Up to two initials from the full name, for the avatar plate.
+  String get _initials {
+    final parts = user.fullName.trim().split(RegExp(r'\s+'));
+    final letters = parts
+        .where((part) => part.isNotEmpty)
+        .map((part) => part[0])
+        .take(2)
+        .join();
+    return letters.isEmpty ? '?' : letters.toUpperCase();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -188,12 +253,31 @@ class _UserMenu extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
+            Container(
+              width: AppSpacing.xl,
+              height: AppSpacing.xl,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: Brand.navyPlate,
+                shape: BoxShape.circle,
+                border: Border.all(color: AppPalette.gold, width: 1.2),
+              ),
+              child: Text(
+                _initials,
+                style: theme.textTheme.labelLarge?.copyWith(
+                  color: AppPalette.gold,
+                  letterSpacing: 0.4,
+                ),
+              ),
+            ),
+            const SizedBox(width: AppSpacing.sm),
             if (showName) ...[
               Text(
                 user.fullName,
                 key: const Key('shell.userName'),
                 style: theme.textTheme.bodyMedium?.copyWith(
-                  color: theme.colorScheme.onPrimary,
+                  color: Brand.onNavy,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
               const SizedBox(width: AppSpacing.sm),
@@ -205,10 +289,12 @@ class _UserMenu extends StatelessWidget {
               backgroundColor: theme.colorScheme.secondary,
               labelStyle: theme.textTheme.labelMedium?.copyWith(
                 color: theme.colorScheme.onSecondary,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 0.4,
               ),
               side: BorderSide.none,
             ),
-            Icon(Icons.arrow_drop_down, color: theme.colorScheme.onPrimary),
+            Icon(Icons.arrow_drop_down, color: Brand.onNavyMuted),
           ],
         ),
       ),
@@ -227,6 +313,7 @@ class _NavigationDrawer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return NavigationDrawer(
       selectedIndex: selectedIndex,
       onDestinationSelected: (index) {
@@ -234,13 +321,32 @@ class _NavigationDrawer extends StatelessWidget {
         context.go(destinations[index].path);
       },
       children: [
-        Padding(
-          padding: const EdgeInsets.all(AppSpacing.md),
-          child: Text(
-            'Stark Group VMS',
-            style: Theme.of(context).textTheme.titleMedium,
+        // The navy header makes the drawer part of the same family as the
+        // top bar and the page banners.
+        Container(
+          decoration: AppDecorations.headerBanner(
+            borderRadius: BorderRadius.zero,
+          ),
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.md,
+            AppSpacing.lg,
+            AppSpacing.md,
+            AppSpacing.md,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Stark Group VMS',
+                style: theme.textTheme.titleLarge?.copyWith(
+                  color: Brand.onNavy,
+                ),
+              ),
+              AppDecorations.goldRule(),
+            ],
           ),
         ),
+        const SizedBox(height: AppSpacing.sm),
         for (final destination in destinations)
           NavigationDrawerDestination(
             icon: Icon(destination.icon),

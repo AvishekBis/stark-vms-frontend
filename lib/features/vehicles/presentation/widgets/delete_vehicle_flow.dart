@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/network/api_exception.dart';
+import '../../../../core/theme/app_palette.dart';
+import '../../../../shared/widgets/brand.dart';
 import '../../../../shared/widgets/confirm_dialog.dart';
 import '../../../../shared/widgets/feedback.dart';
 import '../../data/vehicle.dart';
@@ -60,8 +62,15 @@ Future<void> _offerInactive(
     context: context,
     builder: (dialogContext) => AlertDialog(
       key: const Key('vehicleHistoryDialog'),
+      // The same centred plate as the other "something stands in the way"
+      // dialogs (ConfirmDialog, StaleVersionDialog).
+      icon: const IconPlate(icon: Icons.history, size: 48),
       title: Text(error.title ?? 'Vehicle has history'),
-      content: Text(error.message),
+      content: Text(
+        error.message,
+        style: Theme.of(dialogContext).textTheme.bodyMedium
+            ?.copyWith(color: AppPalette.inkMuted),
+      ),
       actions: [
         TextButton(
           key: const Key('vehicleHistoryDialog.close'),

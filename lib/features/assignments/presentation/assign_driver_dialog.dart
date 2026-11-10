@@ -4,8 +4,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/config/app_config.dart';
 import '../../../core/network/api_exception.dart';
 import '../../../core/network/page_response.dart';
+import '../../../core/theme/app_decorations.dart';
+import '../../../core/theme/app_palette.dart';
 import '../../../core/theme/app_spacing.dart';
+import '../../../core/theme/status_colors.dart';
 import '../../../core/utils/debouncer.dart';
+import '../../../shared/widgets/brand.dart';
 import '../../../shared/widgets/state_views.dart';
 import '../../drivers/data/driver.dart';
 import '../../drivers/data/driver_query.dart';
@@ -99,8 +103,9 @@ class _AssignDriverDialogState extends ConsumerState<AssignDriverDialog> {
     return AlertDialog(
       key: const Key('assignDialog'),
       scrollable: true,
-      title: Text(
-        current == null
+      title: DialogTitle(
+        icon: Icons.person_add_alt_1_outlined,
+        title: current == null
             ? 'Assign a driver to ${widget.vehicle.vehicleNumber}'
             : 'Change the driver of ${widget.vehicle.vehicleNumber}',
       ),
@@ -113,12 +118,37 @@ class _AssignDriverDialogState extends ConsumerState<AssignDriverDialog> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               if (current != null) ...[
-                Text(
-                  'Current driver: ${current.fullName}. Assigning someone '
-                  'else ends that assignment (history is kept).',
-                  style: theme.textTheme.bodyMedium,
+                // A note, not a warning: a gold veil and a plate, no tone.
+                DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: AppPalette.goldTint,
+                    borderRadius: BorderRadius.circular(AppDecorations.radius),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(
+                      AppSpacing.sm + AppSpacing.xs,
+                    ),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const IconPlate(
+                          icon: Icons.swap_horiz,
+                          tint: AppPalette.goldSoft,
+                          size: 32,
+                        ),
+                        const SizedBox(width: AppSpacing.sm + AppSpacing.xs),
+                        Expanded(
+                          child: Text(
+                            'Current driver: ${current.fullName}. Assigning someone '
+                            'else ends that assignment (history is kept).',
+                            style: theme.textTheme.bodyMedium,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
-                const SizedBox(height: AppSpacing.sm),
+                const SizedBox(height: AppSpacing.md),
               ],
               TextField(
                 key: const Key('assignDialog.search'),
@@ -243,16 +273,43 @@ class _DriverChoice extends StatelessWidget {
       if (isCurrent) 'current driver',
       if (!isCurrent && vehicle != null) 'drives ${vehicle.vehicleNumber}',
     ].join(' · ');
-    return ListTile(
-      key: ValueKey('assignDialog.driver.${driver.id}'),
-      selected: selected,
-      leading: Icon(
-        selected ? Icons.radio_button_checked : Icons.radio_button_unchecked,
+    // The chosen row is marked three ways — the radio glyph, the gold veil and
+    // the gold edge — so it never relies on colour alone.
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+      child: ListTile(
+        key: ValueKey('assignDialog.driver.${driver.id}'),
+        selected: selected,
+        selectedColor: AppPalette.navy,
+        selectedTileColor: AppPalette.goldTint,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppDecorations.radius),
+          side: BorderSide(
+            color: selected ? AppPalette.gold : AppPalette.outlineSoft,
+          ),
+        ),
+        leading: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              selected
+                  ? Icons.radio_button_checked
+                  : Icons.radio_button_unchecked,
+              color: selected ? AppPalette.navy : AppPalette.inkMuted,
+            ),
+            const SizedBox(width: AppSpacing.sm),
+            InitialsAvatar(
+              name: driver.fullName,
+              size: 36,
+              tint: selected ? AppPalette.goldSoft : AppPalette.surfaceMuted,
+            ),
+          ],
+        ),
+        title: Text(driver.fullName),
+        subtitle: Text(details),
+        trailing: LicenseExpiryBadge(driver: driver),
+        onTap: onTap,
       ),
-      title: Text(driver.fullName),
-      subtitle: Text(details),
-      trailing: LicenseExpiryBadge(driver: driver),
-      onTap: onTap,
     );
   }
 }
@@ -265,20 +322,27 @@ class _ErrorBox extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final danger = StatusColors.of(context).danger;
     final title = error.title;
     return DecoratedBox(
       key: const Key('assignDialog.error'),
       decoration: BoxDecoration(
-        color: theme.colorScheme.errorContainer,
-        borderRadius: BorderRadius.circular(AppSpacing.sm),
+        color: danger.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(AppDecorations.radius),
+        border: Border.all(color: danger.withValues(alpha: 0.4)),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.sm + AppSpacing.xs),
+        padding: const EdgeInsets.all(AppSpacing.md),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(Icons.error_outline, color: theme.colorScheme.error),
-            const SizedBox(width: AppSpacing.sm),
+            IconPlate(
+              icon: Icons.error_outline,
+              tint: danger.withValues(alpha: 0.14),
+              color: danger,
+              size: 34,
+            ),
+            const SizedBox(width: AppSpacing.sm + AppSpacing.xs),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -287,13 +351,13 @@ class _ErrorBox extends StatelessWidget {
                     Text(
                       title,
                       style: theme.textTheme.titleSmall?.copyWith(
-                        color: theme.colorScheme.onErrorContainer,
+                        color: danger,
                       ),
                     ),
                   Text(
                     error.message,
                     style: theme.textTheme.bodyMedium?.copyWith(
-                      color: theme.colorScheme.onErrorContainer,
+                      color: AppPalette.ink,
                     ),
                   ),
                 ],

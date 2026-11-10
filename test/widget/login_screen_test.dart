@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:stark_vms_frontend/core/config/app_config.dart';
 import 'package:stark_vms_frontend/core/network/api_exception.dart';
 import 'package:stark_vms_frontend/core/storage/preferences_provider.dart';
 import 'package:stark_vms_frontend/features/auth/data/auth_repository.dart';
@@ -129,5 +130,25 @@ void main() {
     await tester.tap(find.byKey(const Key('login.togglePassword')));
     await tester.pump();
     expect(passwordField().obscureText, isFalse);
+  });
+
+  testWidgets('the demo hint names the configured credentials', (tester) async {
+    // The deployed backend's demo passwords differ from the local seed, so the
+    // hint must read its two lines from the DEMO_ADMIN / DEMO_STAFF
+    // dart-defines rather than hard-code them. Asserting against AppConfig
+    // (not against literals) is what proves that: the test passes on a plain
+    // run, where the fallbacks apply, AND on a build that overrides them.
+    await pumpLogin(tester);
+
+    final hint = tester.widget<Text>(find.byKey(const Key('login.demoHint')));
+    expect(AppConfig.showDemoCredentials, isTrue, reason: 'debug build');
+    expect(
+      hint.data,
+      'Demo accounts (non-real credentials)\n'
+      'Admin: ${AppConfig.demoAdmin}\n'
+      'Staff: ${AppConfig.demoStaff}',
+    );
+    // The wording that keeps the hint honest stays in the text.
+    expect(hint.data, contains('non-real credentials'));
   });
 }

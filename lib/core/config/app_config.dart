@@ -23,6 +23,27 @@ abstract final class AppConfig {
     defaultValue: !kReleaseMode,
   );
 
+  /// The admin line of the demo hint on the login screen, as
+  /// `email / password`.
+  ///
+  /// The hint has to name credentials that actually work against the backend
+  /// the build talks to, and those differ per deployment: the local seed uses
+  /// one password, the deployed database another. So the two lines come from
+  /// `--dart-define=DEMO_ADMIN=...` / `DEMO_STAFF=...`, and fall back to the
+  /// local seed values when a build does not pass them.
+  ///
+  /// These are demo accounts on a course deployment, never real credentials.
+  static const String demoAdmin = String.fromEnvironment(
+    'DEMO_ADMIN',
+    defaultValue: 'admin@stark.local / Admin@12345',
+  );
+
+  /// The staff line of the demo hint; see [demoAdmin].
+  static const String demoStaff = String.fromEnvironment(
+    'DEMO_STAFF',
+    defaultValue: 'staff@stark.local / Staff@12345',
+  );
+
   /// Generous timeout: a sleeping Render free instance can take close to a
   /// minute to answer the first request.
   static const Duration requestTimeout = Duration(seconds: 75);
