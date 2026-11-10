@@ -28,3 +28,16 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+
+  # Display face for headings and figures (ADR 0025). Bundled, not fetched at runtime, so the
+  # CanvasKit renderer has it offline and the look does not depend on the viewer's system fonts.
+  # Playfair Display, SIL Open Font License 1.1 - see assets/fonts/OFL.txt.
+  fonts:
+    - family: PlayfairDisplay
+      fonts:
+        - asset: assets/fonts/PlayfairDisplay-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/PlayfairDisplay-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/PlayfairDisplay-Bold.ttf
+          weight: 700

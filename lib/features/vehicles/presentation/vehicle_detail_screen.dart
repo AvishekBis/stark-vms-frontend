@@ -3,8 +3,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/router/app_routes.dart';
+import '../../../core/theme/app_decorations.dart';
+import '../../../core/theme/app_palette.dart';
 import '../../../core/theme/app_spacing.dart';
+import '../../../core/theme/status_colors.dart';
 import '../../../core/utils/formatters.dart';
+import '../../../shared/widgets/banner_actions.dart';
+import '../../../shared/widgets/brand.dart';
+import '../../../shared/widgets/labeled_value.dart';
 import '../../../shared/widgets/state_views.dart';
 import '../../auth/presentation/auth_controller.dart';
 import '../data/vehicle.dart';
@@ -32,22 +38,16 @@ class VehicleDetailScreen extends ConsumerWidget {
   }
 }
 
-class _VehicleOverview extends ConsumerWidget {
+class _VehicleOverview extends StatelessWidget {
   const _VehicleOverview({required this.vehicle});
 
   final Vehicle vehicle;
 
-  Future<void> _delete(BuildContext context, WidgetRef ref) async {
-    final deleted = await confirmAndDeleteVehicle(context, ref, vehicle);
-    if (deleted && context.mounted) {
-      context.go(AppRoutes.vehicles);
-    }
-  }
-
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final isAdmin = ref.watch(currentUserProvider)?.isAdmin ?? false;
-    final textTheme = Theme.of(context).textTheme;
+  Widget build(BuildContext context) {
+    final isCompact =
+        ScreenSize.fromWidth(MediaQuery.sizeOf(context).width) ==
+        ScreenSize.compact;
     final fields = <(String, String)>[
       ('Vehicle number', vehicle.vehicleNumber),
       ('Vehicle type', vehicle.vehicleType.label),
@@ -72,73 +72,35 @@ class _VehicleOverview extends ConsumerWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Align(
-                alignment: Alignment.centerLeft,
-                child: TextButton.icon(
-                  onPressed: () => context.go(AppRoutes.vehicles),
-                  icon: const Icon(Icons.arrow_back),
-                  label: const Text('All vehicles'),
-                ),
-              ),
-              const SizedBox(height: AppSpacing.sm),
-              Card(
+              _VehicleBanner(vehicle: vehicle, isCompact: isCompact),
+              SizedBox(height: isCompact ? AppSpacing.sm : AppSpacing.md),
+              DecoratedBox(
+                decoration: AppDecorations.card(),
                 child: Padding(
                   padding: const EdgeInsets.all(AppSpacing.lg),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Wrap(
-                        spacing: AppSpacing.md,
-                        runSpacing: AppSpacing.sm,
-                        crossAxisAlignment: WrapCrossAlignment.center,
-                        children: [
-                          Text(
-                            vehicle.vehicleNumber,
-                            key: const Key('vehicleDetail.number'),
-                            style: textTheme.headlineSmall,
-                          ),
-                          VehicleStatusBadge(status: vehicle.status),
-                        ],
+                      const SectionHeading(
+                        title: 'Vehicle record',
+                        icon: Icons.fact_check_outlined,
+                        rule: false,
                       ),
-                      if (vehicle.brandModel != null) ...[
-                        const SizedBox(height: AppSpacing.xs),
-                        Text(vehicle.brandModel!, style: textTheme.titleMedium),
-                      ],
                       const SizedBox(height: AppSpacing.lg),
                       Wrap(
                         spacing: AppSpacing.xl,
-                        runSpacing: AppSpacing.md,
+                        runSpacing: AppSpacing.lg,
                         children: [
                           for (final (label, value) in fields)
-                            _DetailField(label: label, value: value),
+                            LabeledValue(label: label, value: value),
                         ],
                       ),
-                      const SizedBox(height: AppSpacing.lg),
-                      Wrap(
-                        spacing: AppSpacing.sm,
-                        runSpacing: AppSpacing.sm,
-                        children: [
-                          FilledButton.icon(
-                            key: const Key('vehicleDetail.edit'),
-                            onPressed: () =>
-                                context.go(AppRoutes.editVehicle(vehicle.id)),
-                            icon: const Icon(Icons.edit_outlined),
-                            label: const Text('Edit'),
-                          ),
-                          if (isAdmin)
-                            OutlinedButton.icon(
-                              key: const Key('vehicleDetail.delete'),
-                              style: OutlinedButton.styleFrom(
-                                foregroundColor: Theme.of(context)
-                                    .colorScheme
-                                    .error,
-                              ),
-                              onPressed: () => _delete(context, ref),
-                              icon: const Icon(Icons.delete_outline),
-                              label: const Text('Delete'),
-                            ),
-                        ],
-                      ),
+                      // On a phone the actions leave the banner, so it stays
+                      // short, and sit under the fields instead.
+                      if (isCompact) ...[
+                        const SizedBox(height: AppSpacing.lg),
+                        _RecordActions(vehicle: vehicle, onBanner: false),
+                      ],
                     ],
                   ),
                 ),
@@ -151,30 +113,152 @@ class _VehicleOverview extends ConsumerWidget {
   }
 }
 
-class _DetailField extends StatelessWidget {
-  const _DetailField({required this.label, required this.value});
+/// The navy banner that opens the record: "All vehicles", the number in the
+/// serif face over the gold rule, the status badge and the brand and model,
+/// with Edit / Delete at the end on a tablet or desktop.
+class _VehicleBanner extends StatelessWidget {
+  const _VehicleBanner({required this.vehicle, required this.isCompact});
 
-  final String label;
-  final String value;
+  final Vehicle vehicle;
+
+  /// Phone layout: tighter padding, no icon plate, actions below the card.
+  final bool isCompact;
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return SizedBox(
-      width: AppSpacing.detailFieldWidth,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            label,
-            style: theme.textTheme.labelMedium?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
+    final textTheme = Theme.of(context).textTheme;
+
+    final titleBlock = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          vehicle.vehicleNumber,
+          key: const Key('vehicleDetail.number'),
+          style: textTheme.headlineSmall?.copyWith(color: Brand.onNavy),
+        ),
+        AppDecorations.goldRule(
+          margin: EdgeInsets.only(top: isCompact ? AppSpacing.sm : 10),
+        ),
+        SizedBox(
+          height: isCompact ? AppSpacing.sm : AppSpacing.sm + AppSpacing.xs,
+        ),
+        Wrap(
+          spacing: AppSpacing.sm + AppSpacing.xs,
+          runSpacing: AppSpacing.xs,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          children: [
+            VehicleStatusBadge(status: vehicle.status),
+            if (vehicle.brandModel != null)
+              Text(
+                vehicle.brandModel!,
+                style: textTheme.titleMedium?.copyWith(
+                  color: Brand.onNavyMuted,
+                ),
+              ),
+          ],
+        ),
+      ],
+    );
+
+    return Container(
+      clipBehavior: Clip.antiAlias,
+      decoration: AppDecorations.headerBanner(),
+      child: Padding(
+        padding: EdgeInsets.fromLTRB(
+          AppSpacing.md,
+          isCompact ? AppSpacing.xs : AppSpacing.sm,
+          isCompact ? AppSpacing.md : AppSpacing.lg,
+          isCompact ? AppSpacing.md : AppSpacing.lg,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            TextButton.icon(
+              style: BannerActions.text(dense: isCompact),
+              onPressed: () => context.go(AppRoutes.vehicles),
+              icon: const Icon(Icons.arrow_back),
+              label: const Text('All vehicles'),
             ),
-          ),
-          const SizedBox(height: AppSpacing.xs),
-          Text(value, style: theme.textTheme.bodyLarge),
-        ],
+            SizedBox(height: isCompact ? AppSpacing.xs : AppSpacing.sm),
+            Padding(
+              padding: const EdgeInsets.only(left: AppSpacing.sm),
+              child: Wrap(
+                spacing: AppSpacing.lg,
+                runSpacing: isCompact ? AppSpacing.sm : AppSpacing.md,
+                alignment: WrapAlignment.spaceBetween,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  if (isCompact)
+                    titleBlock
+                  else
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconPlate(
+                          icon: Icons.directions_car,
+                          tint: Brand.navyPlate,
+                          color: AppPalette.gold,
+                          size: 44,
+                        ),
+                        const SizedBox(width: AppSpacing.md),
+                        Flexible(child: titleBlock),
+                      ],
+                    ),
+                  if (!isCompact) _RecordActions(vehicle: vehicle),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
+    );
+  }
+}
+
+/// Edit and (ADMIN) Delete: banner-styled on the navy banner, theme-styled
+/// in the record card on a phone.
+class _RecordActions extends ConsumerWidget {
+  const _RecordActions({required this.vehicle, this.onBanner = true});
+
+  final Vehicle vehicle;
+  final bool onBanner;
+
+  Future<void> _delete(BuildContext context, WidgetRef ref) async {
+    final deleted = await confirmAndDeleteVehicle(context, ref, vehicle);
+    if (deleted && context.mounted) {
+      context.go(AppRoutes.vehicles);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isAdmin = ref.watch(currentUserProvider)?.isAdmin ?? false;
+    return Wrap(
+      spacing: AppSpacing.sm + AppSpacing.xs,
+      runSpacing: AppSpacing.sm,
+      crossAxisAlignment: WrapCrossAlignment.center,
+      children: [
+        FilledButton.icon(
+          key: const Key('vehicleDetail.edit'),
+          style: onBanner ? BannerActions.filled() : null,
+          onPressed: () => context.go(AppRoutes.editVehicle(vehicle.id)),
+          icon: const Icon(Icons.edit_outlined),
+          label: const Text('Edit'),
+        ),
+        if (isAdmin)
+          OutlinedButton.icon(
+            key: const Key('vehicleDetail.delete'),
+            style: onBanner
+                ? BannerActions.outlined()
+                : OutlinedButton.styleFrom(
+                    foregroundColor: StatusColors.of(context).danger,
+                  ),
+            onPressed: () => _delete(context, ref),
+            icon: const Icon(Icons.delete_outline),
+            label: const Text('Delete'),
+          ),
+      ],
     );
   }
 }

@@ -4,9 +4,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/router/app_routes.dart';
+import '../../../core/theme/app_decorations.dart';
+import '../../../core/theme/app_palette.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/utils/clock.dart';
 import '../../../core/utils/validators.dart';
+import '../../../shared/widgets/brand.dart';
 import '../../../shared/widgets/feedback.dart';
 import '../../../shared/widgets/stale_version_dialog.dart';
 import '../../../shared/widgets/state_views.dart';
@@ -167,7 +170,9 @@ class _VehicleFormViewState extends ConsumerState<_VehicleFormView> {
     final formState = ref.watch(vehicleFormControllerProvider);
     final controller = ref.read(vehicleFormControllerProvider.notifier);
     final currentYear = ref.watch(clockProvider).now().year;
-    final textTheme = Theme.of(context).textTheme;
+    final isCompact =
+        ScreenSize.fromWidth(MediaQuery.sizeOf(context).width) ==
+        ScreenSize.compact;
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(AppSpacing.md),
@@ -175,183 +180,232 @@ class _VehicleFormViewState extends ConsumerState<_VehicleFormView> {
         alignment: Alignment.topCenter,
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: AppSpacing.formMaxWidth),
-          child: Card(
-            child: Padding(
-              padding: const EdgeInsets.all(AppSpacing.lg),
-              child: Form(
-                key: _formKey,
-                autovalidateMode: _autovalidateMode,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Text(
-                      _isEdit ? 'Edit vehicle' : 'Register vehicle',
-                      style: textTheme.headlineSmall,
-                    ),
-                    const SizedBox(height: AppSpacing.xs),
-                    Text(
-                      'Fields marked * are required.',
-                      style: textTheme.bodySmall,
-                    ),
-                    const SizedBox(height: AppSpacing.lg),
-                    TextFormField(
-                      key: const Key('vehicleForm.number'),
-                      controller: _number,
-                      autofocus: !_isEdit,
-                      textInputAction: TextInputAction.next,
-                      textCapitalization: TextCapitalization.characters,
-                      decoration: InputDecoration(
-                        labelText: 'Vehicle number *',
-                        hintText: 'e.g. DHAKA METRO-GA 11-2345',
-                        errorText: formState.errorFor('vehicleNumber'),
-                        errorMaxLines: 2,
-                      ),
-                      validator: VehicleValidators.vehicleNumber,
-                      onChanged: (_) =>
-                          controller.clearFieldError('vehicleNumber'),
-                    ),
-                    const SizedBox(height: AppSpacing.md),
-                    _ResponsivePair(
-                      first: DropdownButtonFormField<VehicleType>(
-                        key: const Key('vehicleForm.type'),
-                        initialValue: _type,
-                        decoration: InputDecoration(
-                          labelText: 'Vehicle type *',
-                          errorText: formState.errorFor('vehicleType'),
-                        ),
-                        items: [
-                          for (final type in VehicleType.values)
-                            DropdownMenuItem(
-                              value: type,
-                              child: Text(type.label),
-                            ),
-                        ],
-                        validator: (value) =>
-                            value == null ? 'Vehicle type is required.' : null,
-                        onChanged: (value) {
-                          setState(() => _type = value);
-                          controller.clearFieldError('vehicleType');
-                        },
-                      ),
-                      second: DropdownButtonFormField<FuelType?>(
-                        key: const Key('vehicleForm.fuel'),
-                        initialValue: _fuel,
-                        decoration: InputDecoration(
-                          labelText: 'Fuel type',
-                          errorText: formState.errorFor('fuelType'),
-                        ),
-                        items: [
-                          const DropdownMenuItem<FuelType?>(
-                            child: Text('Not specified'),
-                          ),
-                          for (final fuel in FuelType.values)
-                            DropdownMenuItem<FuelType?>(
-                              value: fuel,
-                              child: Text(fuel.label),
-                            ),
-                        ],
-                        onChanged: (value) {
-                          setState(() => _fuel = value);
-                          controller.clearFieldError('fuelType');
-                        },
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.md),
-                    _ResponsivePair(
-                      first: TextFormField(
-                        key: const Key('vehicleForm.brand'),
-                        controller: _brand,
-                        textInputAction: TextInputAction.next,
-                        decoration: InputDecoration(
-                          labelText: 'Brand',
-                          hintText: 'e.g. Toyota',
-                          errorText: formState.errorFor('brand'),
-                        ),
-                        validator: VehicleValidators.brand,
-                        onChanged: (_) => controller.clearFieldError('brand'),
-                      ),
-                      second: TextFormField(
-                        key: const Key('vehicleForm.model'),
-                        controller: _model,
-                        textInputAction: TextInputAction.next,
-                        decoration: InputDecoration(
-                          labelText: 'Model',
-                          hintText: 'e.g. Axio',
-                          errorText: formState.errorFor('model'),
-                        ),
-                        validator: VehicleValidators.model,
-                        onChanged: (_) => controller.clearFieldError('model'),
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.md),
-                    _ResponsivePair(
-                      first: TextFormField(
-                        key: const Key('vehicleForm.year'),
-                        controller: _year,
-                        keyboardType: TextInputType.number,
-                        textInputAction: TextInputAction.next,
-                        inputFormatters: [
-                          FilteringTextInputFormatter.digitsOnly,
-                          LengthLimitingTextInputFormatter(4),
-                        ],
-                        decoration: InputDecoration(
-                          labelText: 'Manufacture year',
-                          hintText:
-                              '${VehicleValidators.minManufactureYear}–${currentYear + 1}',
-                          errorText: formState.errorFor('manufactureYear'),
-                        ),
-                        validator: (value) => VehicleValidators.manufactureYear(
-                          value,
-                          currentYear: currentYear,
-                        ),
-                        onChanged: (_) =>
-                            controller.clearFieldError('manufactureYear'),
-                      ),
-                      second: TextFormField(
-                        key: const Key('vehicleForm.color'),
-                        controller: _color,
-                        textInputAction: TextInputAction.done,
-                        decoration: InputDecoration(
-                          labelText: 'Colour',
-                          hintText: 'e.g. White',
-                          errorText: formState.errorFor('color'),
-                        ),
-                        validator: VehicleValidators.color,
-                        onChanged: (_) => controller.clearFieldError('color'),
-                        onFieldSubmitted: (_) => _submit(),
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.lg),
-                    Wrap(
-                      alignment: WrapAlignment.end,
-                      spacing: AppSpacing.sm,
-                      runSpacing: AppSpacing.sm,
-                      children: [
-                        OutlinedButton(
-                          key: const Key('vehicleForm.cancel'),
-                          onPressed: formState.isSubmitting ? null : _cancel,
-                          child: const Text('Cancel'),
-                        ),
-                        FilledButton.icon(
-                          key: const Key('vehicleForm.save'),
-                          onPressed: formState.isSubmitting ? null : _submit,
-                          icon: formState.isSubmitting
-                              ? const SizedBox.square(
-                                  dimension: AppSpacing.md,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                  ),
-                                )
-                              : const Icon(Icons.save_outlined),
-                          label: Text(
-                            _isEdit ? 'Save changes' : 'Register vehicle',
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
+          child: Form(
+            key: _formKey,
+            autovalidateMode: _autovalidateMode,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                PageHeader(
+                  title: _isEdit ? 'Edit vehicle' : 'Register vehicle',
+                  subtitle: 'Fields marked * are required.',
+                  icon: _isEdit ? Icons.edit_outlined : Icons.directions_car,
+                  dense: isCompact,
                 ),
-              ),
+                const SizedBox(height: AppSpacing.md),
+                Container(
+                  clipBehavior: Clip.antiAlias,
+                  decoration: AppDecorations.card(),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.all(AppSpacing.lg),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            const SectionHeading(
+                              title: 'Identification',
+                              icon: Icons.confirmation_number_outlined,
+                              rule: false,
+                            ),
+                            const SizedBox(height: AppSpacing.md),
+                            TextFormField(
+                              key: const Key('vehicleForm.number'),
+                              controller: _number,
+                              autofocus: !_isEdit,
+                              textInputAction: TextInputAction.next,
+                              textCapitalization: TextCapitalization.characters,
+                              decoration: InputDecoration(
+                                labelText: 'Vehicle number *',
+                                hintText: 'e.g. DHAKA METRO-GA 11-2345',
+                                errorText: formState.errorFor('vehicleNumber'),
+                                errorMaxLines: 2,
+                              ),
+                              validator: VehicleValidators.vehicleNumber,
+                              onChanged: (_) =>
+                                  controller.clearFieldError('vehicleNumber'),
+                            ),
+                            const SizedBox(height: AppSpacing.md),
+                            _ResponsivePair(
+                              first: DropdownButtonFormField<VehicleType>(
+                                key: const Key('vehicleForm.type'),
+                                initialValue: _type,
+                                decoration: InputDecoration(
+                                  labelText: 'Vehicle type *',
+                                  errorText: formState.errorFor('vehicleType'),
+                                ),
+                                items: [
+                                  for (final type in VehicleType.values)
+                                    DropdownMenuItem(
+                                      value: type,
+                                      child: Text(type.label),
+                                    ),
+                                ],
+                                validator: (value) => value == null
+                                    ? 'Vehicle type is required.'
+                                    : null,
+                                onChanged: (value) {
+                                  setState(() => _type = value);
+                                  controller.clearFieldError('vehicleType');
+                                },
+                              ),
+                              second: DropdownButtonFormField<FuelType?>(
+                                key: const Key('vehicleForm.fuel'),
+                                initialValue: _fuel,
+                                decoration: InputDecoration(
+                                  labelText: 'Fuel type',
+                                  errorText: formState.errorFor('fuelType'),
+                                ),
+                                items: [
+                                  const DropdownMenuItem<FuelType?>(
+                                    child: Text('Not specified'),
+                                  ),
+                                  for (final fuel in FuelType.values)
+                                    DropdownMenuItem<FuelType?>(
+                                      value: fuel,
+                                      child: Text(fuel.label),
+                                    ),
+                                ],
+                                onChanged: (value) {
+                                  setState(() => _fuel = value);
+                                  controller.clearFieldError('fuelType');
+                                },
+                              ),
+                            ),
+                            const SizedBox(height: AppSpacing.lg),
+                            const SectionHeading(
+                              title: 'Specification',
+                              icon: Icons.tune,
+                              rule: false,
+                            ),
+                            const SizedBox(height: AppSpacing.md),
+                            _ResponsivePair(
+                              first: TextFormField(
+                                key: const Key('vehicleForm.brand'),
+                                controller: _brand,
+                                textInputAction: TextInputAction.next,
+                                decoration: InputDecoration(
+                                  labelText: 'Brand',
+                                  hintText: 'e.g. Toyota',
+                                  errorText: formState.errorFor('brand'),
+                                ),
+                                validator: VehicleValidators.brand,
+                                onChanged: (_) =>
+                                    controller.clearFieldError('brand'),
+                              ),
+                              second: TextFormField(
+                                key: const Key('vehicleForm.model'),
+                                controller: _model,
+                                textInputAction: TextInputAction.next,
+                                decoration: InputDecoration(
+                                  labelText: 'Model',
+                                  hintText: 'e.g. Axio',
+                                  errorText: formState.errorFor('model'),
+                                ),
+                                validator: VehicleValidators.model,
+                                onChanged: (_) =>
+                                    controller.clearFieldError('model'),
+                              ),
+                            ),
+                            const SizedBox(height: AppSpacing.md),
+                            _ResponsivePair(
+                              first: TextFormField(
+                                key: const Key('vehicleForm.year'),
+                                controller: _year,
+                                keyboardType: TextInputType.number,
+                                textInputAction: TextInputAction.next,
+                                inputFormatters: [
+                                  FilteringTextInputFormatter.digitsOnly,
+                                  LengthLimitingTextInputFormatter(4),
+                                ],
+                                decoration: InputDecoration(
+                                  labelText: 'Manufacture year',
+                                  hintText:
+                                      '${VehicleValidators.minManufactureYear}–${currentYear + 1}',
+                                  errorText: formState.errorFor(
+                                    'manufactureYear',
+                                  ),
+                                ),
+                                validator: (value) =>
+                                    VehicleValidators.manufactureYear(
+                                      value,
+                                      currentYear: currentYear,
+                                    ),
+                                onChanged: (_) => controller.clearFieldError(
+                                  'manufactureYear',
+                                ),
+                              ),
+                              second: TextFormField(
+                                key: const Key('vehicleForm.color'),
+                                controller: _color,
+                                textInputAction: TextInputAction.done,
+                                decoration: InputDecoration(
+                                  labelText: 'Colour',
+                                  hintText: 'e.g. White',
+                                  errorText: formState.errorFor('color'),
+                                ),
+                                validator: VehicleValidators.color,
+                                onChanged: (_) =>
+                                    controller.clearFieldError('color'),
+                                onFieldSubmitted: (_) => _submit(),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      // The action row reads as a footer rail: its own warm band,
+                      // closed off by a hairline, so Save always looks anchored to
+                      // the bottom of the form.
+                      DecoratedBox(
+                        decoration: const BoxDecoration(
+                          color: AppPalette.surfaceMuted,
+                          border: Border(
+                            top: BorderSide(color: AppPalette.outlineSoft),
+                          ),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: AppSpacing.lg,
+                            vertical: AppSpacing.md,
+                          ),
+                          child: Wrap(
+                            alignment: WrapAlignment.end,
+                            spacing: AppSpacing.sm,
+                            runSpacing: AppSpacing.sm,
+                            children: [
+                              OutlinedButton(
+                                key: const Key('vehicleForm.cancel'),
+                                onPressed: formState.isSubmitting
+                                    ? null
+                                    : _cancel,
+                                child: const Text('Cancel'),
+                              ),
+                              FilledButton.icon(
+                                key: const Key('vehicleForm.save'),
+                                onPressed: formState.isSubmitting
+                                    ? null
+                                    : _submit,
+                                icon: formState.isSubmitting
+                                    ? const SizedBox.square(
+                                        dimension: AppSpacing.md,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                        ),
+                                      )
+                                    : const Icon(Icons.save_outlined),
+                                label: Text(
+                                  _isEdit ? 'Save changes' : 'Register vehicle',
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
           ),
         ),

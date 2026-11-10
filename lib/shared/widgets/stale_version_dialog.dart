@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 
+import '../../core/theme/app_palette.dart';
+import '../../core/theme/status_colors.dart';
+import 'brand.dart';
+
 /// Shown when a save is answered 409 `stale-version` (contract 6.2,
 /// ADR 0023): someone else changed the record since the form was opened.
 ///
@@ -34,11 +38,21 @@ class StaleVersionDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final warning = StatusColors.of(context).warning;
     return AlertDialog(
       key: const Key('staleVersion.dialog'),
-      icon: const Icon(Icons.sync_problem_outlined),
+      icon: IconPlate(
+        icon: Icons.sync_problem_outlined,
+        tint: warning.withValues(alpha: 0.14),
+        color: warning,
+        size: 48,
+      ),
       title: const Text(title),
-      content: Text('$message\n\n$discardWarning'),
+      content: Text(
+        '$message\n\n$discardWarning',
+        style: Theme.of(context).textTheme.bodyMedium
+            ?.copyWith(color: AppPalette.inkMuted),
+      ),
       actions: [
         TextButton(
           key: const Key('staleVersion.cancel'),

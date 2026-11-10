@@ -1,5 +1,20 @@
 # Stark Group VMS — Frontend (Flutter Web)
 
+> ### Stark Group VMS — one project, two repositories
+>
+> The fleet management system is split the way it is deployed, as the course guideline (Section 9)
+> asks. To see or run the whole thing you need both; to simply *use* it, open the live site.
+>
+> | Repository | What is in it |
+> |---|---|
+> | [`stark-vms-backend`](https://github.com/AvishekBis/stark-vms-backend) | Spring Boot 3.5 / Java 21 REST API, PostgreSQL, Flyway, JWT |
+> | [`stark-vms-frontend`](https://github.com/AvishekBis/stark-vms-frontend) | Flutter Web client, Riverpod, go_router **(you are here)** |
+>
+> **Live site:** <https://stark-vms-avishek.netlify.app> · **API:** <https://stark-vms-backend-i2i2.onrender.com/api/v1> · **API docs:** <https://stark-vms-backend-i2i2.onrender.com/swagger-ui.html>
+>
+> Demo logins and the whole feature list are further down this page. The API is on Render's free
+> tier and sleeps when idle, so the first request can take up to a minute.
+
 Vehicle Management System for the Stark Group fleet: login, vehicle list, register / edit /
 delete vehicles with duplicate-number protection. **Release v1.0 (Assignment 1)**, plus the
 **v1.1 hardening**: the login screen shows the 429 of login throttling
@@ -13,16 +28,19 @@ there is no mock or hard-coded vehicle data in `lib/` (FR-V06).
 
 | | URL |
 |---|---|
-| Frontend (Netlify) | `https://<your-site>.netlify.app` |
-| Backend API (Render) | `https://<your-service>.onrender.com/api/v1` |
-| API docs (Swagger UI) | `https://<your-service>.onrender.com/swagger-ui.html` |
+| Frontend (Netlify) | <https://stark-vms-avishek.netlify.app> |
+| Backend API (Render) | <https://stark-vms-backend-i2i2.onrender.com/api/v1> |
+| API docs (Swagger UI) | <https://stark-vms-backend-i2i2.onrender.com/swagger-ui.html> |
 
-Demo accounts (non-real credentials, local/demo profile only):
+Demo accounts — throw-away credentials, not used anywhere else. The live site uses the second pair; running
+locally bootstraps the first:
 
-| Role | Email | Password |
-|---|---|---|
-| ADMIN | `admin@stark.local` | `Admin@12345` |
-| STAFF | `staff@stark.local` | `Staff@12345` |
+| Role | Email | Password (local) | Password (live site) |
+|---|---|---|---|
+| ADMIN | `admin@stark.local` | `Admin@12345` | `Wildstone99@b` |
+| STAFF | `staff@stark.local` | `Staff@12345` | `Wildstone98@b` |
+
+Signing in as STAFF shows the role rules: deleting a vehicle is ADMIN-only and the API answers 403.
 
 > The free Render instance sleeps when idle. The first request can take up to a minute; the app
 > shows **"Connecting to server…"** after 3 seconds. To give it a head start, the app sends a
@@ -74,11 +92,14 @@ lib/
 │   │                PageResponse<T>, SlowRequestMonitor, session signals
 │   ├── router/      go_router with auth redirect guard (refreshListenable)
 │   ├── storage/     SharedPreferences provider
-│   ├── theme/       AppTheme (one ThemeData), AppPalette, StatusColors extension, spacing
+│   ├── theme/       AppTheme (one ThemeData), AppPalette, AppDecorations, StatusColors
+│   │                extension, spacing (design language: ADR 0025)
 │   └── utils/       validators, debouncer, clock, formatters
 ├── shared/widgets/  AppShell, StatusBadge, AsyncValueView/StateViews, ConfirmDialog,
 │                    PaginationBar, ConnectingBanner, SplashScreen, AppFeedback,
-│                    StaleVersionDialog (v1.1)
+│                    StaleVersionDialog (v1.1), DataTableFrame, LabeledValue,
+│                    BannerActions, brand.dart (PageHeader, SectionHeading,
+│                    StatPlate, IconPlate, Ornament)
 └── features/
     ├── auth/        data: User, LoginResponse, AuthSession, AuthRepository, SessionStorage
     │                presentation: AuthController, LoginController, LoginScreen
@@ -99,6 +120,25 @@ Ready for v2.0: `PageResponse<T>` and the Problem Details parser are shared in `
 (document expiry badges reuse it); a `Clock` provider makes time-based logic testable;
 the dashboard providers are the only place to swap for `GET /dashboard/summary`.
 
+## Look and feel
+
+The navy-and-gold design is recorded in
+[ADR 0025](https://github.com/AvishekBis/stark-vms-backend/blob/main/docs/adr/0025-visual-identity-navy-and-gold.md) (why, the accessibility rule for
+gold, alternatives, costs). It is the same design as Assignment 2, and these four files are
+byte-identical in both projects; widgets take colours and decoration from them and write no
+colour values of their own:
+
+| File | Holds |
+|---|---|
+| `lib/core/theme/app_palette.dart` | Every colour value (navy, gold, `goldInk`, cream background, status hues) |
+| `lib/core/theme/app_decorations.dart` | Gradients, shadows, cards, `accentCard`, banner, icon plate, gold rule |
+| `lib/core/theme/app_theme.dart` | The one `ThemeData` (serif headings, buttons, inputs, dialogs, tables, rail) |
+| `lib/shared/widgets/brand.dart` | `PageHeader`, `SectionHeading`, `StatPlate`, `IconPlate`, `Ornament` and the other shared brand widgets |
+
+Headings and figures use **Playfair Display** (Medium, SemiBold, Bold), bundled in
+`assets/fonts/` and declared in `pubspec.yaml`; it is licensed under the SIL Open Font License
+1.1 (`assets/fonts/OFL.txt`). Nothing is fetched at runtime.
+
 ## Run locally
 
 Prerequisites: Flutter 3.47.7, Chrome, and the backend running on `http://localhost:8080`
@@ -118,7 +158,7 @@ flutter run -d chrome --web-port 5000 --dart-define=API_BASE_URL=http://localhos
 ## Build and deploy to Netlify
 
 ```bash
-flutter build web --release --dart-define=API_BASE_URL=https://<your-service>.onrender.com/api/v1
+flutter build web --release --dart-define=API_BASE_URL=https://stark-vms-backend-i2i2.onrender.com/api/v1
 # Course demo only: also show the demo account hint on the login screen.
 #   --dart-define=SHOW_DEMO_CREDENTIALS=true
 ```
@@ -128,7 +168,7 @@ flutter build web --release --dart-define=API_BASE_URL=https://<your-service>.on
 2. SPA routing: `web/_redirects` (`/*  /index.html  200`) is copied into `build/web`, and
    `netlify.toml` contains the same rule, so refreshing a deep link such as `/vehicles/12` works.
    `web/_headers` and `netlify.toml` also set the security headers (see "Security notes").
-3. Add the Netlify URL (e.g. `https://<your-site>.netlify.app`) to the backend's
+3. Add the Netlify URL (e.g. <https://stark-vms-avishek.netlify.app>) to the backend's
    `CORS_ALLOWED_ORIGINS` on Render and redeploy the backend.
 4. Smoke-test on the live URL: login, vehicle list, register a vehicle, duplicate rejected.
 
@@ -168,7 +208,10 @@ always ask for confirmation. Status badges always show text next to the colour.
 ### Screenshots
 
 Taken by the E2E journey below (`binding.takeScreenshot`, saved by
-`test_driver/integration_test.dart`) against the local backend with demo data.
+`test_driver/integration_test.dart`) against the local backend with demo data, on 2026-11-08.
+They show the screens and their content, but **still in the v1.1 look**, from before the
+navy-and-gold restyle ([ADR 0025](https://github.com/AvishekBis/stark-vms-backend/blob/main/docs/adr/0025-visual-identity-navy-and-gold.md)); the next
+E2E run rewrites them.
 
 | Login | Dashboard |
 |---|---|
@@ -204,6 +247,9 @@ This is a short summary. Each decision, with the alternatives considered and its
   its field error.
 - **Demo credentials hint** is shown only in debug / profile builds, or in a release build made
   with `--dart-define=SHOW_DEMO_CREDENTIALS=true` for a course demo.
+- **Navy-and-gold design with a bundled serif** ([ADR 0025](https://github.com/AvishekBis/stark-vms-backend/blob/main/docs/adr/0025-visual-identity-navy-and-gold.md)):
+  one palette file, shared banner and card widgets, Playfair Display shipped in the app
+  instead of fetched at runtime. Trade-off: about 370 KB of font on first load.
 
 ## Security notes and trade-offs
 
@@ -238,7 +284,9 @@ dart format --output=none --set-exit-if-changed .
 flutter analyze
 ```
 
-Last run: 106 tests passed, `flutter analyze` 0 issues. Saved output of `flutter test --reporter expanded`:
+Last run (after the navy-and-gold restyle, ADR 0025, 2026-11-10): 106 tests passed unchanged,
+`flutter analyze` 0 issues, `dart format` 0 changed. Saved output of
+`flutter test --reporter expanded`, from the v1.1 run of 2026-11-08 (the same 106 tests):
 [`../docs/test-reports/frontend-test-report.txt`](docs/test-reports/frontend-test-report.txt).
 
 | Level | File | Covers |

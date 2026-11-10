@@ -3,8 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/router/app_routes.dart';
+import '../../../core/theme/app_decorations.dart';
+import '../../../core/theme/app_palette.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/utils/formatters.dart';
+import '../../../shared/widgets/brand.dart';
 import '../../../shared/widgets/state_views.dart';
 import '../../auth/presentation/auth_controller.dart';
 import '../../vehicles/data/vehicle.dart';
@@ -18,7 +21,9 @@ class DashboardScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(currentUserProvider);
-    final textTheme = Theme.of(context).textTheme;
+    final isCompact =
+        ScreenSize.fromWidth(MediaQuery.sizeOf(context).width) ==
+        ScreenSize.compact;
 
     return Scaffold(
       body: RefreshIndicator(
@@ -31,18 +36,17 @@ class DashboardScreen extends ConsumerWidget {
         child: ListView(
           padding: const EdgeInsets.all(AppSpacing.md),
           children: [
-            Text(
-              user == null ? 'Welcome' : 'Welcome, ${user.fullName}',
+            // The welcome banner: the navy gradient, the serif greeting and
+            // the signed-in line.
+            PageHeader(
               key: const Key('dashboard.welcome'),
-              style: textTheme.headlineSmall,
+              icon: Icons.insights_outlined,
+              dense: isCompact,
+              title: user == null ? 'Welcome' : 'Welcome, ${user.fullName}',
+              subtitle: user == null
+                  ? null
+                  : 'Signed in as ${user.role.label} · ${user.email}',
             ),
-            if (user != null) ...[
-              const SizedBox(height: AppSpacing.xs),
-              Text(
-                'Signed in as ${user.role.label} · ${user.email}',
-                style: textTheme.bodyMedium,
-              ),
-            ],
             const SizedBox(height: AppSpacing.lg),
             Wrap(
               spacing: AppSpacing.md,
@@ -63,22 +67,30 @@ class DashboardScreen extends ConsumerWidget {
   }
 }
 
+/// The fixed-size slot of a summary card, with the gold leading edge of the
+/// brand's figure cards.
 class _DashboardCard extends StatelessWidget {
-  const _DashboardCard({required this.child});
+  const _DashboardCard({required this.child, this.padded = true});
 
   final Widget child;
+
+  /// False when [child] is already a [StatPlate], which draws and pads its
+  /// own card.
+  final bool padded;
 
   @override
   Widget build(BuildContext context) {
     return SizedBox(
       width: AppSpacing.summaryCardWidth,
       height: AppSpacing.summaryCardHeight,
-      child: Card(
-        child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.md),
-          child: child,
-        ),
-      ),
+      child: padded
+          ? AppDecorations.accentCard(
+              child: Padding(
+                padding: const EdgeInsets.all(AppSpacing.md),
+                child: child,
+              ),
+            )
+          : child,
     );
   }
 }
@@ -90,15 +102,34 @@ class _TotalVehiclesCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final total = ref.watch(totalVehiclesProvider);
     final theme = Theme.of(context);
+    // With a figure: the brand's StatPlate. While loading or on an error: the
+    // same card shape, with the progress bar or the message where the figure
+    // would be.
+    if (total case AsyncData(:final value)) {
+      return _DashboardCard(
+        padded: false,
+        child: StatPlate(
+          label: 'Total vehicles',
+          value: Formatters.count(value),
+          valueKey: const Key('dashboard.totalVehicles'),
+          icon: Icons.directions_car,
+        ),
+      );
+    }
     return _DashboardCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(Icons.directions_car, color: theme.colorScheme.primary),
+              Expanded(
+                child: Text(
+                  'Total vehicles',
+                  style: theme.textTheme.titleSmall,
+                ),
+              ),
               const SizedBox(width: AppSpacing.sm),
-              Text('Total vehicles', style: theme.textTheme.titleMedium),
+              const IconPlate(icon: Icons.directions_car, size: 34),
             ],
           ),
           const Spacer(),
@@ -106,9 +137,7 @@ class _TotalVehiclesCard extends ConsumerWidget {
             data: (count) => Text(
               Formatters.count(count),
               key: const Key('dashboard.totalVehicles'),
-              style: theme.textTheme.displaySmall?.copyWith(
-                color: theme.colorScheme.primary,
-              ),
+              style: theme.textTheme.headlineMedium,
             ),
             loading: () => const LinearProgressIndicator(),
             error: (error, _) => Row(
@@ -149,11 +178,25 @@ class _QuickActionCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Quick action', style: theme.textTheme.titleMedium),
+          Row(
+            children: [
+              Expanded(
+                child: Text('Quick action', style: theme.textTheme.titleSmall),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              const IconPlate(icon: Icons.add_road, size: 34),
+            ],
+          ),
           const SizedBox(height: AppSpacing.xs),
+          // One line: the card has a fixed height, and with the icon plate in
+          // the header a second line would push the button out of it.
           Text(
             'Add a new vehicle to the fleet.',
-            style: theme.textTheme.bodyMedium,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: AppPalette.inkMuted,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
           const Spacer(),
           FilledButton.icon(
@@ -174,28 +217,22 @@ class _RecentVehiclesCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final recent = ref.watch(recentVehiclesProvider);
-    final theme = Theme.of(context);
-    return Card(
+    return DecoratedBox(
+      decoration: AppDecorations.card(),
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.md),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    'Recently added',
-                    style: theme.textTheme.titleMedium,
-                  ),
-                ),
-                TextButton(
-                  onPressed: () => context.go(AppRoutes.vehicles),
-                  child: const Text('View all'),
-                ),
-              ],
+            SectionHeading(
+              title: 'Recently added',
+              icon: Icons.history,
+              trailing: TextButton(
+                onPressed: () => context.go(AppRoutes.vehicles),
+                child: const Text('View all'),
+              ),
             ),
-            const SizedBox(height: AppSpacing.sm),
+            const SizedBox(height: AppSpacing.md),
             AsyncValueView<List<Vehicle>>(
               value: recent,
               onRetry: () => ref.invalidate(recentVehiclesProvider),
@@ -208,21 +245,30 @@ class _RecentVehiclesCard extends ConsumerWidget {
               data: (vehicles) => Column(
                 children: [
                   for (final vehicle in vehicles)
-                    ListTile(
-                      key: ValueKey('dashboard.recent.${vehicle.id}'),
-                      contentPadding: EdgeInsets.zero,
-                      leading: const Icon(Icons.directions_car_outlined),
-                      title: Text(vehicle.vehicleNumber),
-                      subtitle: Text(
-                        [
-                          vehicle.vehicleType.label,
-                          vehicle.brandModel,
-                          'added ${Formatters.date(vehicle.createdAt)}',
-                        ].whereType<String>().join(' · '),
+                    // The panel is a white card painted by a DecoratedBox, which
+                    // would hide the tile's ink: a ListTile paints on the nearest
+                    // Material. A transparent Material gives it one of its own.
+                    Material(
+                      type: MaterialType.transparency,
+                      child: ListTile(
+                        key: ValueKey('dashboard.recent.${vehicle.id}'),
+                        contentPadding: EdgeInsets.zero,
+                        leading: const IconPlate(
+                          icon: Icons.directions_car_outlined,
+                          size: 36,
+                        ),
+                        title: Text(vehicle.vehicleNumber),
+                        subtitle: Text(
+                          [
+                            vehicle.vehicleType.label,
+                            vehicle.brandModel,
+                            'added ${Formatters.date(vehicle.createdAt)}',
+                          ].whereType<String>().join(' · '),
+                        ),
+                        trailing: VehicleStatusBadge(status: vehicle.status),
+                        onTap: () =>
+                            context.go(AppRoutes.vehicleDetail(vehicle.id)),
                       ),
-                      trailing: VehicleStatusBadge(status: vehicle.status),
-                      onTap: () =>
-                          context.go(AppRoutes.vehicleDetail(vehicle.id)),
                     ),
                 ],
               ),

@@ -5,9 +5,14 @@ import 'package:go_router/go_router.dart';
 import '../../../core/config/app_config.dart';
 import '../../../core/network/page_response.dart';
 import '../../../core/router/app_routes.dart';
+import '../../../core/theme/app_palette.dart';
 import '../../../core/theme/app_spacing.dart';
+import '../../../core/theme/status_colors.dart';
 import '../../../core/utils/debouncer.dart';
 import '../../../core/utils/formatters.dart';
+import '../../../shared/widgets/banner_actions.dart';
+import '../../../shared/widgets/brand.dart';
+import '../../../shared/widgets/data_table_frame.dart';
 import '../../../shared/widgets/pagination_bar.dart';
 import '../../../shared/widgets/state_views.dart';
 import '../../auth/presentation/auth_controller.dart';
@@ -89,13 +94,33 @@ class _VehicleListScreenState extends ConsumerState<VehicleListScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            _ListHeader(
+            PageHeader(
+              title: 'Vehicles',
+              // No subtitle on a phone, where it would wrap and push the
+              // first card off the screen.
+              subtitle: isCompact ? null : 'The Stark Group fleet register',
+              dense: isCompact,
+              icon: Icons.directions_car,
+              actions: [
+                // On a phone the same action is the floating button instead.
+                if (!isCompact)
+                  FilledButton.icon(
+                    key: const Key('vehicles.register'),
+                    style: BannerActions.filled(),
+                    onPressed: () => context.go(AppRoutes.newVehicle),
+                    icon: const Icon(Icons.add),
+                    label: const Text('Register vehicle'),
+                  ),
+              ],
+            ),
+            SizedBox(height: isCompact ? AppSpacing.sm : AppSpacing.md),
+            _ListToolbar(
               searchController: _searchController,
               onSearchChanged: _onSearchChanged,
               onSearchSubmitted: _onSearchSubmitted,
               onClearSearch: _clearSearch,
               query: query,
-              showRegisterButton: !isCompact,
+              isCompact: isCompact,
             ),
             const SizedBox(height: AppSpacing.sm),
             SizedBox(
@@ -128,14 +153,16 @@ class _VehicleListScreenState extends ConsumerState<VehicleListScreen> {
   }
 }
 
-class _ListHeader extends ConsumerWidget {
-  const _ListHeader({
+/// Search and sort on one card under the page banner (bare on a phone, where
+/// the room belongs to the rows), as on the v2 list screens.
+class _ListToolbar extends ConsumerWidget {
+  const _ListToolbar({
     required this.searchController,
     required this.onSearchChanged,
     required this.onSearchSubmitted,
     required this.onClearSearch,
     required this.query,
-    required this.showRegisterButton,
+    required this.isCompact,
   });
 
   final TextEditingController searchController;
@@ -143,7 +170,7 @@ class _ListHeader extends ConsumerWidget {
   final ValueChanged<String> onSearchSubmitted;
   final VoidCallback onClearSearch;
   final VehicleQuery query;
-  final bool showRegisterButton;
+  final bool isCompact;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -170,36 +197,23 @@ class _ListHeader extends ConsumerWidget {
       ),
     );
 
-    return Wrap(
-      spacing: AppSpacing.md,
-      runSpacing: AppSpacing.sm,
-      crossAxisAlignment: WrapCrossAlignment.center,
-      alignment: WrapAlignment.spaceBetween,
-      children: [
-        Text('Vehicles', style: Theme.of(context).textTheme.headlineSmall),
-        Wrap(
-          spacing: AppSpacing.sm,
-          runSpacing: AppSpacing.sm,
-          crossAxisAlignment: WrapCrossAlignment.center,
-          children: [
-            ConstrainedBox(
-              constraints: const BoxConstraints(
-                minWidth: AppSpacing.searchMinWidth,
-                maxWidth: AppSpacing.searchMaxWidth,
-              ),
-              child: searchField,
+    return ListToolbar(
+      isCompact: isCompact,
+      child: Wrap(
+        spacing: AppSpacing.sm + AppSpacing.xs,
+        runSpacing: AppSpacing.sm + AppSpacing.xs,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        children: [
+          ConstrainedBox(
+            constraints: const BoxConstraints(
+              minWidth: AppSpacing.searchMinWidth,
+              maxWidth: AppSpacing.searchMaxWidth,
             ),
-            _SortMenu(query: query),
-            if (showRegisterButton)
-              FilledButton.icon(
-                key: const Key('vehicles.register'),
-                onPressed: () => context.go(AppRoutes.newVehicle),
-                icon: const Icon(Icons.add),
-                label: const Text('Register vehicle'),
-              ),
-          ],
-        ),
-      ],
+            child: searchField,
+          ),
+          _SortMenu(query: query),
+        ],
+      ),
     );
   }
 }
@@ -228,7 +242,7 @@ class _SortMenu extends ConsumerWidget {
             ),
       ],
       child: Chip(
-        avatar: const Icon(Icons.sort),
+        avatar: const Icon(Icons.sort, color: AppPalette.navy),
         label: _SortLabel(
           field: query.sortField,
           direction: query.sortDirection,
@@ -411,65 +425,57 @@ class _VehicleTable extends StatelessWidget {
       (column) => column.sortField == query.sortField,
     );
 
-    return LayoutBuilder(
-      builder: (context, constraints) => SingleChildScrollView(
-        child: SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: ConstrainedBox(
-            constraints: BoxConstraints(minWidth: constraints.maxWidth),
-            child: Card(
-              clipBehavior: Clip.antiAlias,
-              child: DataTable(
-                key: const Key('vehicles.table'),
-                showCheckboxColumn: false,
-                sortColumnIndex: sortIndex < 0 ? null : sortIndex,
-                sortAscending: query.sortDirection == SortDirection.ascending,
-                columns: [
-                  for (final column in columns)
-                    DataColumn(
-                      label: Text(column.label),
-                      numeric: column.numeric,
-                      onSort: column.sortField == null
-                          ? null
-                          : (_, _) => onSort(column.sortField!),
-                    ),
-                ],
-                rows: [
-                  for (final vehicle in vehicles)
-                    DataRow(
-                      key: ValueKey('vehicle.row.${vehicle.id}'),
-                      onSelectChanged: (_) => onOpen(vehicle),
-                      cells: [
-                        DataCell(Text(vehicle.vehicleNumber)),
-                        DataCell(Text(vehicle.vehicleType.label)),
-                        DataCell(
-                          Text(Formatters.orMissing(vehicle.brandModel)),
-                        ),
-                        DataCell(
-                          Text(Formatters.orMissing(vehicle.manufactureYear)),
-                        ),
-                        if (isFull)
-                          DataCell(
-                            Text(Formatters.orMissing(vehicle.fuelType?.label)),
-                          ),
-                        DataCell(VehicleStatusBadge(status: vehicle.status)),
-                        if (isFull)
-                          DataCell(Text(Formatters.date(vehicle.createdAt))),
-                        DataCell(
-                          _RowActions(
-                            vehicle: vehicle,
-                            isAdmin: isAdmin,
-                            onEdit: onEdit,
-                            onDelete: onDelete,
-                          ),
-                        ),
-                      ],
-                    ),
-                ],
-              ),
+    final textTheme = Theme.of(context).textTheme;
+
+    return DataTableFrame(
+      table: DataTable(
+        key: const Key('vehicles.table'),
+        showCheckboxColumn: false,
+        sortColumnIndex: sortIndex < 0 ? null : sortIndex,
+        sortAscending: query.sortDirection == SortDirection.ascending,
+        columns: [
+          for (final column in columns)
+            DataColumn(
+              label: Text(column.label),
+              numeric: column.numeric,
+              onSort: column.sortField == null
+                  ? null
+                  : (_, _) => onSort(column.sortField!),
             ),
-          ),
-        ),
+        ],
+        rows: [
+          for (final (index, vehicle) in vehicles.indexed)
+            DataRow(
+              key: ValueKey('vehicle.row.${vehicle.id}'),
+              color: DataTableFrame.zebraRow(index),
+              onSelectChanged: (_) => onOpen(vehicle),
+              cells: [
+                DataCell(
+                  Text(
+                    vehicle.vehicleNumber,
+                    style: textTheme.titleSmall?.copyWith(
+                      color: AppPalette.navy,
+                    ),
+                  ),
+                ),
+                DataCell(Text(vehicle.vehicleType.label)),
+                DataCell(Text(Formatters.orMissing(vehicle.brandModel))),
+                DataCell(Text(Formatters.orMissing(vehicle.manufactureYear))),
+                if (isFull)
+                  DataCell(Text(Formatters.orMissing(vehicle.fuelType?.label))),
+                DataCell(VehicleStatusBadge(status: vehicle.status)),
+                if (isFull) DataCell(Text(Formatters.date(vehicle.createdAt))),
+                DataCell(
+                  _RowActions(
+                    vehicle: vehicle,
+                    isAdmin: isAdmin,
+                    onEdit: onEdit,
+                    onDelete: onDelete,
+                  ),
+                ),
+              ],
+            ),
+        ],
       ),
     );
   }
@@ -505,13 +511,14 @@ class _RowActions extends StatelessWidget {
           key: ValueKey('vehicle.edit.${vehicle.id}'),
           tooltip: 'Edit',
           onPressed: () => onEdit(vehicle),
+          color: AppPalette.navy,
           icon: const Icon(Icons.edit_outlined),
         ),
         if (isAdmin)
           IconButton(
             key: ValueKey('vehicle.delete.${vehicle.id}'),
             tooltip: 'Delete',
-            color: Theme.of(context).colorScheme.error,
+            color: StatusColors.of(context).danger,
             onPressed: () => onDelete(vehicle),
             icon: const Icon(Icons.delete_outline),
           ),
@@ -538,9 +545,10 @@ class _VehicleCards extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
+    final statusColors = StatusColors.of(context);
     return ListView.separated(
       itemCount: vehicles.length,
-      separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.sm),
+      separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.sm + 2),
       itemBuilder: (context, index) {
         final vehicle = vehicles[index];
         final details = [
@@ -549,42 +557,49 @@ class _VehicleCards extends StatelessWidget {
           vehicle.manufactureYear?.toString(),
           vehicle.fuelType?.label,
         ].whereType<String>().join(' · ');
-        return Card(
+        // The leading edge and the icon plate pick up the status tone; the
+        // badge below still spells the status out, so colour never carries it.
+        final tone = statusColors.background(
+          VehicleStatusBadge.toneFor(vehicle.status),
+        );
+        return AccentEdgeCard(
           key: ValueKey('vehicle.card.${vehicle.id}'),
-          child: InkWell(
-            onTap: () => onOpen(vehicle),
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(
-                AppSpacing.md,
-                AppSpacing.sm,
-                0,
-                AppSpacing.sm,
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          vehicle.vehicleNumber,
-                          style: textTheme.titleMedium,
-                        ),
-                        const SizedBox(height: AppSpacing.xs),
-                        Text(details, style: textTheme.bodySmall),
-                        const SizedBox(height: AppSpacing.sm),
-                        VehicleStatusBadge(status: vehicle.status),
-                      ],
-                    ),
+          accent: tone,
+          onTap: () => onOpen(vehicle),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.md,
+              AppSpacing.md,
+              0,
+              AppSpacing.md,
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                IconPlate(
+                  icon: Icons.directions_car,
+                  tint: tone.withValues(alpha: 0.14),
+                ),
+                const SizedBox(width: AppSpacing.sm + AppSpacing.xs),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(vehicle.vehicleNumber, style: textTheme.titleMedium),
+                      const SizedBox(height: AppSpacing.xs),
+                      Text(details, style: textTheme.bodySmall),
+                      const SizedBox(height: AppSpacing.sm),
+                      VehicleStatusBadge(status: vehicle.status),
+                    ],
                   ),
-                  _RowActions(
-                    vehicle: vehicle,
-                    isAdmin: isAdmin,
-                    onEdit: onEdit,
-                    onDelete: onDelete,
-                  ),
-                ],
-              ),
+                ),
+                _RowActions(
+                  vehicle: vehicle,
+                  isAdmin: isAdmin,
+                  onEdit: onEdit,
+                  onDelete: onDelete,
+                ),
+              ],
             ),
           ),
         );
