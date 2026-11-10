@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../core/network/sort_direction.dart';
+import '../../core/theme/app_palette.dart';
 import '../../core/theme/app_spacing.dart';
 
 /// A "Sort" chip that opens a menu of every field and direction. Lists use
@@ -39,7 +40,9 @@ class SortMenu<F> extends StatelessWidget {
             ),
       ],
       child: Chip(
-        avatar: const Icon(Icons.sort),
+        avatar: const Icon(Icons.sort, color: AppPalette.navy),
+        backgroundColor: AppPalette.surfaceMuted,
+        side: const BorderSide(color: AppPalette.outlineSoft),
         label: SortLabel(label: label(field), direction: direction),
       ),
     );

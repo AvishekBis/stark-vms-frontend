@@ -8,6 +8,7 @@ import '../../../core/utils/dates.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../core/utils/validators.dart';
 import '../../../core/network/api_exception.dart';
+import '../../../shared/widgets/brand.dart';
 import '../../../shared/widgets/date_form_field.dart';
 import '../../../shared/widgets/feedback.dart';
 import '../../../shared/widgets/stale_version_dialog.dart';
@@ -162,8 +163,9 @@ class _MaintenanceFormDialogState extends ConsumerState<MaintenanceFormDialog> {
 
     return AlertDialog(
       key: const Key('maintenanceDialog'),
-      title: Text(
-        _isEdit ? 'Edit maintenance record' : 'Add maintenance record',
+      title: DialogTitle(
+        icon: _isEdit ? Icons.edit_outlined : Icons.build_outlined,
+        title: _isEdit ? 'Edit maintenance record' : 'Add maintenance record',
       ),
       content: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: AppSpacing.dialogMaxWidth),
@@ -277,12 +279,25 @@ class _MaintenanceFormDialogState extends ConsumerState<MaintenanceFormDialog> {
                   ),
                   if (generalError != null) ...[
                     const SizedBox(height: AppSpacing.md),
-                    Text(
-                      generalError,
-                      key: const Key('maintenanceDialog.error'),
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: theme.colorScheme.error,
-                      ),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Icon(
+                          Icons.error_outline,
+                          size: AppSpacing.md + AppSpacing.xs,
+                          color: theme.colorScheme.error,
+                        ),
+                        const SizedBox(width: AppSpacing.sm),
+                        Expanded(
+                          child: Text(
+                            generalError,
+                            key: const Key('maintenanceDialog.error'),
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: theme.colorScheme.error,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ],

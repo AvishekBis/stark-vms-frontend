@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../core/theme/app_palette.dart';
 import '../../core/utils/formatters.dart';
 
 /// A form field that picks a calendar date with the Material date picker.
@@ -60,7 +61,10 @@ class DateFormField extends FormField<DateTime> {
                            onChanged?.call(null);
                          },
                        )
-                     : const Icon(Icons.calendar_today_outlined),
+                     : const Icon(
+                         Icons.calendar_today_outlined,
+                         color: AppPalette.navy,
+                       ),
                ),
                child: Text(value == null ? '' : Formatters.date(value)),
              ),

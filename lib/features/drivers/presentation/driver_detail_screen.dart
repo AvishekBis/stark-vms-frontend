@@ -3,8 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/router/app_routes.dart';
+import '../../../core/theme/app_decorations.dart';
+import '../../../core/theme/app_palette.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/utils/formatters.dart';
+import '../../../shared/widgets/brand.dart';
 import '../../../shared/widgets/labeled_value.dart';
 import '../../../shared/widgets/state_views.dart';
 import '../../assignments/presentation/assignment_history_view.dart';
@@ -49,6 +52,10 @@ class _DriverDetail extends ConsumerWidget {
     final isAdmin = ref.watch(currentUserProvider)?.isAdmin ?? false;
     final theme = Theme.of(context);
     final vehicle = driver.currentVehicle;
+    // A phone gets the same trimmed banner as PageHeader(dense: true).
+    final isCompact =
+        ScreenSize.fromWidth(MediaQuery.sizeOf(context).width) ==
+        ScreenSize.compact;
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(AppSpacing.md),
@@ -70,24 +77,65 @@ class _DriverDetail extends ConsumerWidget {
                 ),
               ),
               const SizedBox(height: AppSpacing.sm),
-              Card(
+              // The hero banner of the page. Hand-built rather than a
+              // PageHeader because the name carries the
+              // `driverDetail.name` key that the tests read and the status
+              // badge sits under it; the proportions follow PageHeader.
+              Container(
+                clipBehavior: Clip.antiAlias,
+                decoration: AppDecorations.headerBanner(),
+                padding: EdgeInsets.all(
+                  isCompact ? AppSpacing.md : AppSpacing.lg,
+                ),
+                child: Row(
+                  children: [
+                    InitialsAvatar(
+                      name: driver.fullName,
+                      size: isCompact ? 40 : 52,
+                      tint: Brand.navyPlate,
+                      color: AppPalette.gold,
+                    ),
+                    SizedBox(
+                      width: isCompact
+                          ? AppSpacing.sm + AppSpacing.xs
+                          : AppSpacing.md,
+                    ),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            driver.fullName,
+                            key: const Key('driverDetail.name'),
+                            style:
+                                (isCompact
+                                        ? theme.textTheme.titleLarge
+                                        : theme.textTheme.headlineSmall)
+                                    ?.copyWith(color: Brand.onNavy),
+                          ),
+                          AppDecorations.goldRule(
+                            margin: const EdgeInsets.only(top: AppSpacing.sm),
+                          ),
+                          const SizedBox(height: AppSpacing.md),
+                          DriverStatusBadge(status: driver.status),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: AppSpacing.md),
+              Container(
+                decoration: AppDecorations.card(),
                 child: Padding(
                   padding: const EdgeInsets.all(AppSpacing.lg),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Wrap(
-                        spacing: AppSpacing.md,
-                        runSpacing: AppSpacing.sm,
-                        crossAxisAlignment: WrapCrossAlignment.center,
-                        children: [
-                          Text(
-                            driver.fullName,
-                            key: const Key('driverDetail.name'),
-                            style: theme.textTheme.headlineSmall,
-                          ),
-                          DriverStatusBadge(status: driver.status),
-                        ],
+                      const SectionHeading(
+                        title: 'Driver details',
+                        icon: Icons.badge_outlined,
+                        rule: false,
                       ),
                       const SizedBox(height: AppSpacing.lg),
                       Wrap(
@@ -128,11 +176,16 @@ class _DriverDetail extends ConsumerWidget {
                                     ),
                                     child: Text(
                                       vehicle.vehicleNumber,
+                                      // Navy, not the gold accent: gold text
+                                      // on white is only about 2.4:1.
                                       style: theme.textTheme.bodyLarge
                                           ?.copyWith(
-                                            color: theme.colorScheme.secondary,
+                                            color: theme.colorScheme.primary,
+                                            fontWeight: FontWeight.w600,
                                             decoration:
                                                 TextDecoration.underline,
+                                            decorationColor: AppPalette.gold,
+                                            decorationThickness: 2,
                                           ),
                                     ),
                                   ),
@@ -180,8 +233,12 @@ class _DriverDetail extends ConsumerWidget {
                 ),
               ),
               const SizedBox(height: AppSpacing.lg),
-              Text('Assignment history', style: theme.textTheme.titleMedium),
-              const SizedBox(height: AppSpacing.sm),
+              const SectionHeading(
+                title: 'Assignment history',
+                icon: Icons.history,
+                rule: false,
+              ),
+              const SizedBox(height: AppSpacing.md),
               AssignmentHistoryView.forDriver(driverId: driver.id),
             ],
           ),

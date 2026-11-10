@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/utils/clock.dart';
 import '../../../core/utils/formatters.dart';
+import '../../../shared/widgets/brand.dart';
 import '../../../shared/widgets/date_form_field.dart';
 import '../../../shared/widgets/feedback.dart';
 import '../data/document_file_picker.dart';
@@ -127,7 +128,10 @@ class _UploadDocumentDialogState extends ConsumerState<UploadDocumentDialog> {
 
     return AlertDialog(
       key: const Key('uploadDialog'),
-      title: Text('Upload document · ${widget.vehicleNumber}'),
+      title: DialogTitle(
+        icon: Icons.upload_file,
+        title: 'Upload document · ${widget.vehicleNumber}',
+      ),
       content: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: AppSpacing.dialogMaxWidth),
         child: SizedBox(
@@ -219,6 +223,14 @@ class _UploadDocumentDialogState extends ConsumerState<UploadDocumentDialog> {
                       runSpacing: AppSpacing.sm,
                       crossAxisAlignment: WrapCrossAlignment.center,
                       children: [
+                        // A plate that fills in once a file is chosen, so the
+                        // affordance reads at a glance.
+                        IconPlate(
+                          icon: file == null
+                              ? Icons.description_outlined
+                              : Icons.insert_drive_file,
+                          size: 32,
+                        ),
                         Text(
                           file == null
                               ? 'No file chosen'
@@ -239,12 +251,25 @@ class _UploadDocumentDialogState extends ConsumerState<UploadDocumentDialog> {
                   ),
                   if (generalError != null) ...[
                     const SizedBox(height: AppSpacing.md),
-                    Text(
-                      generalError,
-                      key: const Key('uploadDialog.error'),
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: theme.colorScheme.error,
-                      ),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Icon(
+                          Icons.error_outline,
+                          size: AppSpacing.md + AppSpacing.xs,
+                          color: theme.colorScheme.error,
+                        ),
+                        const SizedBox(width: AppSpacing.sm),
+                        Expanded(
+                          child: Text(
+                            generalError,
+                            key: const Key('uploadDialog.error'),
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: theme.colorScheme.error,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ],

@@ -6,8 +6,11 @@ import '../../../core/config/app_config.dart';
 import '../../../core/network/page_response.dart';
 import '../../../core/router/app_routes.dart';
 import '../../../core/theme/app_spacing.dart';
+import '../../../core/theme/status_colors.dart';
 import '../../../core/utils/debouncer.dart';
 import '../../../core/utils/formatters.dart';
+import '../../../shared/widgets/banner_actions.dart';
+import '../../../shared/widgets/brand.dart';
 import '../../../shared/widgets/data_table_frame.dart';
 import '../../../shared/widgets/filter_menu.dart';
 import '../../../shared/widgets/pagination_bar.dart';
@@ -92,54 +95,60 @@ class _DriversListScreenState extends ConsumerState<DriversListScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Wrap(
-              spacing: AppSpacing.md,
-              runSpacing: AppSpacing.sm,
-              crossAxisAlignment: WrapCrossAlignment.center,
-              alignment: WrapAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Drivers',
-                  style: Theme.of(context).textTheme.headlineSmall,
-                ),
-                Wrap(
-                  spacing: AppSpacing.sm,
-                  runSpacing: AppSpacing.sm,
-                  crossAxisAlignment: WrapCrossAlignment.center,
-                  children: [
-                    ConstrainedBox(
-                      constraints: const BoxConstraints(
-                        minWidth: AppSpacing.searchMinWidth,
-                        maxWidth: AppSpacing.searchMaxWidth,
-                      ),
-                      child: _SearchField(
-                        controller: _searchController,
-                        onChanged: _onSearchChanged,
-                        onSubmitted: _onSearchSubmitted,
-                        onClear: _clearSearch,
-                      ),
-                    ),
-                    _StatusFilter(status: query.status),
-                    SortMenu<DriverSortField>(
-                      key: const Key('drivers.sortMenu'),
-                      values: DriverSortField.values,
-                      label: (field) => field.label,
-                      field: query.sortField,
-                      direction: query.sortDirection,
-                      onSelected: ref
-                          .read(driverQueryProvider.notifier)
-                          .setSort,
-                    ),
-                    if (!isCompact)
-                      FilledButton.icon(
-                        key: const Key('drivers.add'),
-                        onPressed: () => context.go(AppRoutes.newDriver),
-                        icon: const Icon(Icons.person_add_alt),
-                        label: const Text('Add driver'),
-                      ),
-                  ],
-                ),
+            PageHeader(
+              title: 'Drivers',
+              // The one-line subtitle would wrap to four lines on a 360 px
+              // phone and push the first row off the screen.
+              subtitle: isCompact
+                  ? null
+                  : 'The people behind the wheel, with their licences.',
+              dense: isCompact,
+              icon: Icons.badge_outlined,
+              actions: [
+                if (!isCompact)
+                  FilledButton.icon(
+                    key: const Key('drivers.add'),
+                    style: BannerActions.filled(),
+                    onPressed: () => context.go(AppRoutes.newDriver),
+                    icon: const Icon(Icons.person_add_alt),
+                    label: const Text('Add driver'),
+                  ),
               ],
+            ),
+            SizedBox(height: isCompact ? AppSpacing.sm : AppSpacing.md),
+            // Search and filters share one toolbar card, so the page reads as
+            // a banner, a toolbar and then the results. A phone drops the
+            // card: the vertical room belongs to the rows.
+            ListToolbar(
+              isCompact: isCompact,
+              child: Wrap(
+                spacing: AppSpacing.sm,
+                runSpacing: AppSpacing.sm,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  ConstrainedBox(
+                    constraints: const BoxConstraints(
+                      minWidth: AppSpacing.searchMinWidth,
+                      maxWidth: AppSpacing.searchMaxWidth,
+                    ),
+                    child: _SearchField(
+                      controller: _searchController,
+                      onChanged: _onSearchChanged,
+                      onSubmitted: _onSearchSubmitted,
+                      onClear: _clearSearch,
+                    ),
+                  ),
+                  _StatusFilter(status: query.status),
+                  SortMenu<DriverSortField>(
+                    key: const Key('drivers.sortMenu'),
+                    values: DriverSortField.values,
+                    label: (field) => field.label,
+                    field: query.sortField,
+                    direction: query.sortDirection,
+                    onSelected: ref.read(driverQueryProvider.notifier).setSort,
+                  ),
+                ],
+              ),
             ),
             const SizedBox(height: AppSpacing.sm),
             SizedBox(
@@ -364,6 +373,9 @@ class _DriverTable extends StatelessWidget {
       table: DataTable(
         key: const Key('drivers.table'),
         showCheckboxColumn: false,
+        // Tighter than the theme's spacing: the avatar in the name
+        // cell needs the room, and the row still fits on one screen.
+        columnSpacing: AppSpacing.md,
         sortColumnIndex: sortIndex < 0 ? null : sortIndex,
         sortAscending: query.sortDirection == SortDirection.ascending,
         columns: [
@@ -374,12 +386,21 @@ class _DriverTable extends StatelessWidget {
             ),
         ],
         rows: [
-          for (final driver in drivers)
+          for (final (index, driver) in drivers.indexed)
             DataRow(
               key: ValueKey('driver.row.${driver.id}'),
+              color: DataTableFrame.zebraRow(index),
               onSelectChanged: (_) => onOpen(driver),
               cells: [
-                DataCell(Text(driver.fullName)),
+                DataCell(
+                  Row(
+                    children: [
+                      InitialsAvatar(name: driver.fullName, size: 30),
+                      const SizedBox(width: AppSpacing.sm + AppSpacing.xs),
+                      Text(driver.fullName),
+                    ],
+                  ),
+                ),
                 DataCell(Text(driver.phone)),
                 if (isFull) DataCell(Text(driver.licenseNumber)),
                 DataCell(
@@ -451,50 +472,77 @@ class _DriverCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
     final vehicle = driver.currentVehicle;
-    return Card(
+    // The leading edge picks up the driver's own status tone, and the badges
+    // below still spell that status out in words.
+    final tone = StatusColors.of(context)
+        .background(DriverStatusBadge.toneFor(driver.status));
+
+    return AccentEdgeCard(
       key: ValueKey('driver.card.${driver.id}'),
-      child: InkWell(
-        onTap: () => onOpen(driver),
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(
-            AppSpacing.md,
-            AppSpacing.sm,
-            0,
-            AppSpacing.sm,
-          ),
-          child: Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(driver.fullName, style: textTheme.titleMedium),
-                    const SizedBox(height: AppSpacing.xs),
-                    Text(
-                      '${driver.phone} · ${vehicle == null ? 'Not assigned' : 'Drives ${vehicle.vehicleNumber}'}',
-                      style: textTheme.bodySmall,
-                    ),
-                    const SizedBox(height: AppSpacing.sm),
-                    Wrap(
-                      spacing: AppSpacing.sm,
-                      runSpacing: AppSpacing.xs,
-                      children: [
-                        DriverStatusBadge(status: driver.status),
-                        LicenseExpiryBadge(driver: driver),
-                      ],
-                    ),
-                  ],
-                ),
+      accent: tone,
+      onTap: () => onOpen(driver),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(
+          AppSpacing.md,
+          AppSpacing.sm + AppSpacing.xs,
+          AppSpacing.xs,
+          AppSpacing.sm + AppSpacing.xs,
+        ),
+        // The actions sit under the badges rather than beside the name, so a
+        // long name keeps the full width of the card on a 360 px phone.
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            InitialsAvatar(
+              name: driver.fullName,
+              tint: tone.withValues(alpha: 0.14),
+            ),
+            const SizedBox(width: AppSpacing.md),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // One line each: a card is a summary, and the detail page
+                  // spells the whole value out.
+                  Text(
+                    driver.fullName,
+                    style: textTheme.titleMedium,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: AppSpacing.xs),
+                  Text(
+                    '${driver.phone} · ${vehicle == null ? 'Not assigned' : 'Drives ${vehicle.vehicleNumber}'}',
+                    style: textTheme.bodySmall,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Wrap(
+                          spacing: AppSpacing.sm,
+                          runSpacing: AppSpacing.xs,
+                          children: [
+                            DriverStatusBadge(status: driver.status),
+                            LicenseExpiryBadge(driver: driver),
+                          ],
+                        ),
+                      ),
+                      RowActions(
+                        keyPrefix: 'driver',
+                        id: driver.id,
+                        isAdmin: isAdmin,
+                        onEdit: () => onEdit(driver),
+                        onDelete: () => onDelete(driver),
+                      ),
+                    ],
+                  ),
+                ],
               ),
-              RowActions(
-                keyPrefix: 'driver',
-                id: driver.id,
-                isAdmin: isAdmin,
-                onEdit: () => onEdit(driver),
-                onDelete: () => onDelete(driver),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

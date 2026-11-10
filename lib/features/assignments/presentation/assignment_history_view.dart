@@ -4,9 +4,11 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/network/page_response.dart';
 import '../../../core/router/app_routes.dart';
+import '../../../core/theme/app_palette.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/status_colors.dart';
 import '../../../core/utils/formatters.dart';
+import '../../../shared/widgets/brand.dart';
 import '../../../shared/widgets/data_table_frame.dart';
 import '../../../shared/widgets/pagination_bar.dart';
 import '../../../shared/widgets/state_views.dart';
@@ -122,6 +124,31 @@ StatusBadge _stateBadge(Assignment assignment) => assignment.current
     ? const StatusBadge(label: 'Current', tone: StatusTone.success)
     : const StatusBadge(label: 'Ended', tone: StatusTone.neutral);
 
+/// The tone of one entry: the running assignment is the success tone, a
+/// closed one is neutral. The badge beside it always says which.
+Color _toneOf(BuildContext context, Assignment assignment) {
+  final colors = StatusColors.of(context);
+  return assignment.current ? colors.success : colors.neutral;
+}
+
+/// The running assignment keeps a faint tint of its own tone; the other rows
+/// get the hairline zebra and the gold veil under the pointer.
+WidgetStateProperty<Color?> _rowColor(
+  BuildContext context,
+  int index,
+  Assignment assignment,
+) {
+  return WidgetStateProperty.resolveWith((states) {
+    if (states.contains(WidgetState.hovered)) {
+      return AppPalette.goldTint;
+    }
+    if (assignment.current) {
+      return _toneOf(context, assignment).withValues(alpha: 0.1);
+    }
+    return index.isOdd ? AppPalette.surfaceMuted : null;
+  });
+}
+
 class _AssignmentTable extends StatelessWidget {
   const _AssignmentTable({
     required this.assignments,
@@ -135,7 +162,6 @@ class _AssignmentTable extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
     return DataTableFrame(
       scrollVertically: false,
       table: DataTable(
@@ -150,20 +176,33 @@ class _AssignmentTable extends StatelessWidget {
           if (isFull) const DataColumn(label: Text('Assigned by')),
         ],
         rows: [
-          for (final assignment in assignments)
+          for (final (index, assignment) in assignments.indexed)
             DataRow(
               key: ValueKey('assignment.row.${assignment.id}'),
-              color: assignment.current
-                  ? WidgetStatePropertyAll(colors.primaryContainer)
-                  : null,
+              color: _rowColor(context, index, assignment),
               onSelectChanged: (_) =>
                   _openOther(context, assignment, isVehicle: isVehicle),
               cells: [
                 DataCell(
-                  Text(
-                    isVehicle
-                        ? assignment.driverName
-                        : assignment.vehicleNumber,
+                  Row(
+                    children: [
+                      IconPlate(
+                        icon: isVehicle
+                            ? Icons.person_outline
+                            : Icons.directions_car_outlined,
+                        tint: _toneOf(
+                          context,
+                          assignment,
+                        ).withValues(alpha: 0.14),
+                        size: 28,
+                      ),
+                      const SizedBox(width: AppSpacing.sm + AppSpacing.xs),
+                      Text(
+                        isVehicle
+                            ? assignment.driverName
+                            : assignment.vehicleNumber,
+                      ),
+                    ],
                   ),
                 ),
                 DataCell(Text(Formatters.dateTime(assignment.assignedAt))),
@@ -193,28 +232,55 @@ class _AssignmentTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final textTheme = Theme.of(context).textTheme;
     final period =
         '${Formatters.dateTime(assignment.assignedAt)} – '
         '${assignment.current ? 'now' : Formatters.dateTime(assignment.unassignedAt)}';
     final by = assignment.assignedBy == null
         ? ''
         : ' · assigned by ${assignment.assignedBy}';
+    final tone = _toneOf(context, assignment);
+
     return Padding(
       padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-      child: Card(
+      // One entry of the timeline: the tone on the leading edge and on the
+      // icon plate, the badge spelling the state out.
+      child: AccentEdgeCard(
         key: ValueKey('assignment.${assignment.id}'),
-        color: assignment.current ? theme.colorScheme.primaryContainer : null,
-        child: ListTile(
-          leading: Icon(
-            isVehicle ? Icons.person_outline : Icons.directions_car_outlined,
+        accent: tone,
+        onTap: () => _openOther(context, assignment, isVehicle: isVehicle),
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.md),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              IconPlate(
+                icon: isVehicle
+                    ? Icons.person_outline
+                    : Icons.directions_car_outlined,
+                tint: tone.withValues(alpha: 0.14),
+                size: 36,
+              ),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      isVehicle
+                          ? assignment.driverName
+                          : assignment.vehicleNumber,
+                      style: textTheme.titleMedium,
+                    ),
+                    const SizedBox(height: AppSpacing.xs),
+                    Text('$period$by', style: textTheme.bodySmall),
+                    const SizedBox(height: AppSpacing.sm),
+                    _stateBadge(assignment),
+                  ],
+                ),
+              ),
+            ],
           ),
-          title: Text(
-            isVehicle ? assignment.driverName : assignment.vehicleNumber,
-          ),
-          subtitle: Text('$period$by'),
-          trailing: _stateBadge(assignment),
-          onTap: () => _openOther(context, assignment, isVehicle: isVehicle),
         ),
       ),
     );

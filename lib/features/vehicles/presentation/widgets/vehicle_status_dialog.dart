@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/theme/app_decorations.dart';
+import '../../../../core/theme/app_palette.dart';
 import '../../../../core/theme/app_spacing.dart';
+import '../../../../core/theme/status_colors.dart';
+import '../../../../shared/widgets/brand.dart';
 import '../../../../shared/widgets/feedback.dart';
 import '../../data/vehicle.dart';
 import '../../data/vehicle_enums.dart';
@@ -78,7 +82,10 @@ class _VehicleStatusDialogState extends State<VehicleStatusDialog> {
     return AlertDialog(
       key: const Key('statusDialog'),
       scrollable: true,
-      title: Text('Change status of ${widget.vehicle.vehicleNumber}'),
+      title: DialogTitle(
+        icon: Icons.swap_horiz,
+        title: 'Change status of ${widget.vehicle.vehicleNumber}',
+      ),
       content: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: AppSpacing.dialogMaxWidth),
         child: Column(
@@ -89,6 +96,16 @@ class _VehicleStatusDialogState extends State<VehicleStatusDialog> {
               ListTile(
                 key: ValueKey('statusDialog.${status.apiValue}'),
                 selected: status == _selected,
+                // The chosen row gets a gold veil and a gold edge; the radio
+                // glyph and the badge text still say which one it is.
+                selectedTileColor: AppPalette.goldTint,
+                selectedColor: AppPalette.navy,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(AppDecorations.radius),
+                  side: status == _selected
+                      ? const BorderSide(color: AppPalette.gold)
+                      : BorderSide.none,
+                ),
                 leading: Icon(
                   status == _selected
                       ? Icons.radio_button_checked
@@ -102,17 +119,32 @@ class _VehicleStatusDialogState extends State<VehicleStatusDialog> {
                 onTap: () => setState(() => _selected = status),
               ),
             if (warnInactive) ...[
-              const SizedBox(height: AppSpacing.sm),
-              Text(
-                driver == null
-                    ? 'An inactive vehicle cannot be assigned a driver until it '
-                          'is active again.'
-                    : 'Setting the vehicle INACTIVE will unassign its driver '
-                          '${driver.fullName}. The assignment stays in the history.',
-                key: const Key('statusDialog.inactiveWarning'),
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: theme.colorScheme.error,
-                ),
+              const SizedBox(height: AppSpacing.md),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  IconPlate(
+                    icon: Icons.warning_amber_rounded,
+                    tint: StatusColors.of(context).danger
+                        .withValues(alpha: 0.12),
+                    color: StatusColors.of(context).danger,
+                    size: AppSpacing.xl,
+                  ),
+                  const SizedBox(width: AppSpacing.sm + AppSpacing.xs),
+                  Expanded(
+                    child: Text(
+                      driver == null
+                          ? 'An inactive vehicle cannot be assigned a driver until it '
+                                'is active again.'
+                          : 'Setting the vehicle INACTIVE will unassign its driver '
+                                '${driver.fullName}. The assignment stays in the history.',
+                      key: const Key('statusDialog.inactiveWarning'),
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: theme.colorScheme.error,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ],
           ],

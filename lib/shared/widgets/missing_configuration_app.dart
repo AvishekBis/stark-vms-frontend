@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../core/theme/app_decorations.dart';
 import '../../core/theme/app_theme.dart';
 import 'state_views.dart';
 
@@ -20,10 +21,13 @@ class MissingConfigurationApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light(),
       home: const Scaffold(
-        body: ErrorView(
-          key: Key('config.missingApiBaseUrl'),
-          title: title,
-          message: message,
+        body: DecoratedBox(
+          decoration: BoxDecoration(gradient: AppDecorations.pageGradient),
+          child: ErrorView(
+            key: Key('config.missingApiBaseUrl'),
+            title: title,
+            message: message,
+          ),
         ),
       ),
     );
